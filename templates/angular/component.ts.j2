@@ -1,0 +1,91 @@
+import { Component, OnInit } from '@angular/core';
+import { ApiService, Customer } from '../../../core/services/api.service';
+
+@Component({
+  selector: 'app-customer-list',
+  templateUrl: './customer-list.component.html',
+  styleUrls: ['./customer-list.component.css']
+})
+export class CustomerListComponent implements OnInit {
+  customers: Customer[] = [];
+  loading = false;
+  error: string | null = null;
+
+  newCustomer: Omit<Customer, 'id'> = {
+    name: '',
+    email: '',
+    company: ''
+  };
+
+  selectedCustomer: Customer | null = null;
+
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit(): void {
+    this.fetchCustomers();
+  }
+
+  fetchCustomers(): void {
+    this.loading = true;
+    this.error = null;
+    this.apiService.getCustomers().subscribe({
+      next: (customers: Customer[]) => {
+        this.customers = customers;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load customers';
+        console.error(err);
+        this.loading = false;
+      }
+    });
+  }
+
+  selectCustomer(customer: Customer): void {
+    this.selectedCustomer = { ...customer };
+  }
+
+  addCustomer(): void {
+    if (!this.newCustomer.name || !this.newCustomer.email) return;
+
+    this.apiService.createCustomer(this.newCustomer).subscribe({
+      next: () => {
+        this.newCustomer = { name: '', email: '' };
+        this.fetchCustomers();
+      },
+      error: (err) => {
+        this.error = 'Failed to create customer';
+        console.error(err);
+      }
+    });
+  }
+
+  updateCustomer(): void {
+    if (!this.selectedCustomer) return;
+
+    const { id, ...payload } = this.selectedCustomer;
+
+    this.apiService.updateCustomer(id, payload).subscribe({
+      next: () => {
+        this.selectedCustomer = null;
+        this.fetchCustomers();
+      },
+      error: (err) => {
+        this.error = 'Failed to update customer';
+        console.error(err);
+      }
+    });
+  }
+
+  deleteCustomer(customer: Customer): void {
+    this.apiService.deleteCustomer(customer.id).subscribe({
+      next: () => {
+        this.fetchCustomers();
+      },
+      error: (err) => {
+        this.error = 'Failed to delete customer';
+        console.error(err);
+      }
+    });
+  }
+}

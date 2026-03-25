@@ -1,0 +1,6 @@
+{
+  "domain": "hotel_management",
+  "default_features": ["auth", "room_inventory", "booking", "check_in_checkout", "billing", "dashboard", "reports"],
+  "entities": ["Guest", "Room", "Booking", "Invoice", "Staff"],
+  "architecture_patterns": ["layered_architecture", "dto_mapping", "global_exception_handler"]
+}

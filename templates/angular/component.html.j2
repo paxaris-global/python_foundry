@@ -1,0 +1,56 @@
+<h2>Customers</h2>
+<p>Full CRUD demo for customer management.</p>
+
+{% raw %}
+<div *ngIf="error" class="error">{{ error }}</div>
+<div *ngIf="loading">Loading customers...</div>
+
+<form (ngSubmit)="addCustomer()">
+  <h3>Add Customer</h3>
+  <label>
+    Name:
+    <input type="text" [(ngModel)]="newCustomer.name" name="name" required />
+  </label>
+  <br />
+  <label>
+    Email:
+    <input type="email" [(ngModel)]="newCustomer.email" name="email" required />
+  </label>
+  <br />
+  <label>
+    Company:
+    <input type="text" [(ngModel)]="newCustomer.company" name="company" />
+  </label>
+  <br />
+  <button type="submit">Add</button>
+</form>
+
+<div *ngIf="selectedCustomer" class="edit-form">
+  <h3>Edit Customer</h3>
+  <label>
+    Name:
+    <input type="text" [(ngModel)]="selectedCustomer.name" name="editName" />
+  </label>
+  <br />
+  <label>
+    Email:
+    <input type="email" [(ngModel)]="selectedCustomer.email" name="editEmail" />
+  </label>
+  <br />
+  <label>
+    Company:
+    <input type="text" [(ngModel)]="selectedCustomer.company" name="editCompany" />
+  </label>
+  <br />
+  <button (click)="updateCustomer()">Save</button>
+  <button (click)="selectedCustomer = null">Cancel</button>
+</div>
+
+<ul>
+  <li *ngFor="let customer of customers">
+    <strong>{{ customer.name }}</strong> ({{ customer.email }}) - {{ customer.company }}
+    <button (click)="selectCustomer(customer)">Edit</button>
+    <button (click)="deleteCustomer(customer)">Delete</button>
+  </li>
+</ul>
+{% endraw %}

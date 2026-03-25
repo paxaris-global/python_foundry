@@ -1,0 +1,6 @@
+{
+  "domain": "blog_cms",
+  "default_features": ["auth", "post_management", "categories", "comments", "media_library", "dashboard"],
+  "entities": ["Post", "Category", "Tag", "Comment", "User"],
+  "architecture_patterns": ["content_workflow", "seo_ready_routing", "editorial_roles"]
+}

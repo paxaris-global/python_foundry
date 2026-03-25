@@ -1,0 +1,38 @@
+# {{ project_name }}
+
+{{ description }}
+
+## Stack
+- Backend: {{ backend }}
+- Frontend: {{ frontend }}
+
+## Features
+{% for feature in features %}- {{ feature }}
+{% endfor %}
+
+## Project Structure
+- backend/: Spring Boot API
+- frontend/: Angular SPA
+- docker-compose.yml: Local deployment with PostgreSQL
+- api-contract.json: Generated API description
+- manifest.json: Build manifest
+
+## Run Locally
+1. Copy .env.example to .env if needed
+2. Build and run:
+   docker compose up --build
+3. Backend: http://localhost:8080
+4. Frontend: http://localhost:4200
+
+## Local Database Options
+- By default, the generated backend runs with PostgreSQL in Docker (profile: `postgres`).
+- To run with an in-memory H2 database for local development, set:
+  - `SPRING_PROFILES_ACTIVE=local`
+  - In `backend/src/main/resources/application.yml`, the `local` profile uses H2.
+- For production use with SQL DB, set:
+  - `SPRING_PROFILES_ACTIVE=postgres`
+  - Ensure PostgreSQL running and correct credentials in `application.yml`.
+
+## Notes
+- The backend includes layered architecture with DTO, entity, repository, service, controller, and global exception handling.
+- The frontend includes routing, feature components, and API integration service.
