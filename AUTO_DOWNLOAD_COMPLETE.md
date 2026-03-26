@@ -16,7 +16,7 @@
 
 ### ✅ **app/core/config.py**
 - Added `downloads_dir_path` field for environment variable
-- Added `downloads_dir` property that resolves to the correct path
+- Added `downloads_dir` property that resolves to the correct paths
 - Falls back gracefully if env var not set
 
 ### ✅ **app/utils/download_utils.py** (FIXED)
