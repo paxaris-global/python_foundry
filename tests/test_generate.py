@@ -8,6 +8,7 @@ from app.api.v1.routes import generate as generate_route
 from app.main import app
 from app.models.generation_cache import GenerationCache
 from app.models.job import Job
+from app.models.project import Project
 from app.tasks.generation_tasks import generate_project_task
 
 
@@ -23,13 +24,16 @@ class _Query:
 
 
 class _FakeSession:
-    def __init__(self, cached: GenerationCache | None = None):
+    def __init__(self, cached: GenerationCache | None = None, project: Project | None = None):
         self.cached = cached
+        self.project = project
         self.created_jobs: list[Job] = []
 
     def query(self, model):
         if model is GenerationCache:
             return _Query(self.cached)
+        if model is Project:
+            return _Query(self.project)
         return _Query(None)
 
     def add(self, obj):
@@ -77,9 +81,14 @@ def test_generate_creates_job(monkeypatch) -> None:
     app.dependency_overrides.clear()
 
 
-def test_generate_uses_cache() -> None:
+def test_generate_uses_cache(tmp_path) -> None:
     cached = SimpleNamespace(fingerprint="abc", project_id=uuid4())
-    fake_db = _FakeSession(cached=cached)
+    cached_project = SimpleNamespace(
+        id=cached.project_id,
+        project_path=str(tmp_path),
+        zip_path=None,
+    )
+    fake_db = _FakeSession(cached=cached, project=cached_project)
 
     def _override_db():
         yield fake_db

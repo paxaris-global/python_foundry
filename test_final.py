@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Final test script to verify auto-download functionality to C:\Users\Admin\Downloads\download_ai_project
+Final test script to verify auto-download functionality to C:\\Users\\Admin\\Downloads\\download_ai_project
 """
 import requests
 import time
