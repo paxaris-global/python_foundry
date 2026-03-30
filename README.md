@@ -80,7 +80,7 @@ Generated project includes:
 - _meta/final_enriched_prompt.json
 
 ## Local Development Without Docker
-1. Create virtual environment and install deps:
+1. Create virtual environment and install dep:
    python -m venv .venv
    .venv\Scripts\activate
    pip install -r requirements.txt
