@@ -89,7 +89,7 @@ Generated project includes:
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 3. Start worker:
-   celery -A app.tasks.celery_app.celery_app worker --loglevel=INFOs
+   celery -A app.tasks.celery_app.celery_app worker --loglevel=INFO
 
 ## Testing
 Run:
