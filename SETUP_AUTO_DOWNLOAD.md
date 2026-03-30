@@ -8,7 +8,7 @@ Your application has been fully updated to automatically download generated proj
 
 ## 📋 Updated Files Summary
 
-### 1. **docker-compose.yml** ✅
+### 1. **docker-compose.yml** ✅s
 - Added Windows host volume mapping for both `api` and `worker` services
 - **Change**: Added `-C:/Users/Admin/Downloads:/home/app/downloads` to volumes
 - This maps your Windows Downloads folder to `/home/app/downloads` inside containers
