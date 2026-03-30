@@ -12,7 +12,7 @@ Changed the system to automatically download newly created projects to `C:\Users
 - Handles duplicate filenames by appending a counter (e.g., `project-1.zip`, `project-2.zip`)
 - Includes error handling and logging
 
-### 2. Modified Generation Task
+### 2. Modified Generation Tasks
 **File:** `app/tasks/generation_tasks.py`
 - Added import for `copy_project_to_downloads`
 - After project generation completes, automatically downloads the zip file
