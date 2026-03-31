@@ -74,10 +74,26 @@ class SpringBootGenerator(BaseGenerator):
                 ctx,
             ),
             "backend/Dockerfile": self.renderer.render(TemplateRegistry.SPRINGBOOT_DOCKERFILE.path, ctx),
+            "backend/.gitignore": self._gitignore(),
             f"backend/src/test/java/{package_path}/{app_class}Tests.java": self._test_java(package, app_class),
             f"backend/src/test/java/{package_path}/service/CustomerServiceImplTest.java": self._customer_service_test(package),
         }
         return files
+
+    @staticmethod
+    def _gitignore() -> str:
+        return """target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode/
+.DS_Store
+HELP.md
+"""
 
     @staticmethod
     def _application_java(package: str, app_class: str) -> str:

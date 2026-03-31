@@ -15,21 +15,44 @@
             "outputPath": "dist/{{ project_name }}",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "polyfills": [],
-            "tsConfig": "tsconfig.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [],
             "styles": ["src/styles.css"],
             "scripts": []
-          }
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "browserTarget": "{{ project_name }}:build"
-          }
+          "configurations": {
+            "production": {
+              "buildTarget": "{{ project_name }}:build:production"
+            },
+            "development": {
+              "buildTarget": "{{ project_name }}:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
         }
       }
     }
-  },
-  "defaultProject": "{{ project_name }}"
+  }
 }

@@ -1,6 +1,8 @@
 from celery import Task
 from uuid import UUID
 
+from sqlalchemy.exc import OperationalError
+
 from app.core.logging import get_logger
 from app.db.session import SessionLocal
 from app.models.job import Job, JobStatus
@@ -11,7 +13,12 @@ from app.utils.download_utils import copy_project_to_downloads
 logger = get_logger(__name__)
 
 
-@celery_app.task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 3})
+@celery_app.task(
+    bind=True,
+    autoretry_for=(OperationalError, ConnectionError, TimeoutError),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
 def generate_project_task(self: Task, job_id: str) -> dict:
     db = SessionLocal()
     try:
@@ -76,6 +83,7 @@ def generate_project_task(self: Task, job_id: str) -> dict:
         return result
     except Exception as exc:
         logger.exception("Generation task failed")
+        db.rollback()
         job = db.query(Job).filter(Job.id == UUID(job_id)).first()
         if job:
             job.status = JobStatus.failed

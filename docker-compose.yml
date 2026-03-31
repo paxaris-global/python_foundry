@@ -11,7 +11,7 @@ services:
       - .:/app
       - ./generated_projects:/app/generated_projects
       - ./chroma_data:/app/chroma_data
-      - C:/Users/Admin/Downloads/download_ai_project:/home/app/downloads
+      - ${DOWNLOADS_DIR:-./downloads}:/home/app/downloads
     depends_on:
       - postgres
       - redis
@@ -26,7 +26,7 @@ services:
       - .:/app
       - ./generated_projects:/app/generated_projects
       - ./chroma_data:/app/chroma_data
-      - C:/Users/Admin/Downloads/download_ai_project:/home/app/downloads
+      - ${DOWNLOADS_DIR:-./downloads}:/home/app/downloads
     depends_on:
       - postgres
       - redis

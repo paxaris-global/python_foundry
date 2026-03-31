@@ -50,7 +50,7 @@ export class CustomerListComponent implements OnInit {
 
     this.apiService.createCustomer(this.newCustomer).subscribe({
       next: () => {
-        this.newCustomer = { name: '', email: '' };
+        this.newCustomer = { name: '', email: '', company: '' };
         this.fetchCustomers();
       },
       error: (err) => {

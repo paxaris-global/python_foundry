@@ -5,7 +5,7 @@ spring:
   application:
     name: {{ project_name }}
   profiles:
-    active: postgres
+    active: ${SPRING_PROFILES_ACTIVE:local}
   jpa:
     open-in-view: false
 

@@ -19,6 +19,8 @@ class AngularGenerator(BaseGenerator):
             "frontend/package.json": self.renderer.render(TemplateRegistry.ANGULAR_PACKAGE_JSON.path, ctx),
             "frontend/angular.json": self.renderer.render(TemplateRegistry.ANGULAR_ANGULAR_JSON.path, ctx),
             "frontend/tsconfig.json": self._tsconfig_json(),
+            "frontend/tsconfig.app.json": self._tsconfig_app_json(),
+            "frontend/.gitignore": self._gitignore(),
             "frontend/src/main.ts": self._main_ts(),
             "frontend/src/index.html": self._index_html(app_name),
             "frontend/src/styles.css": self._styles_css(),
@@ -54,27 +56,59 @@ class AngularGenerator(BaseGenerator):
     @staticmethod
     def _tsconfig_json() -> str:
         return """{
-  \"compileOnSave\": false,
-  \"compilerOptions\": {
-    \"baseUrl\": \"./\",
-    \"outDir\": \"./dist/out-tsc\",
-    \"forceConsistentCasingInFileNames\": true,
-    \"strict\": true,
-    \"noImplicitOverride\": true,
-    \"noPropertyAccessFromIndexSignature\": true,
-    \"noImplicitReturns\": true,
-    \"noFallthroughCasesInSwitch\": true,
-    \"sourceMap\": true,
-    \"declaration\": false,
-    \"downlevelIteration\": true,
-    \"experimentalDecorators\": true,
-    \"moduleResolution\": \"node\",
-    \"importHelpers\": true,
-    \"target\": \"ES2022\",
-    \"module\": \"ES2022\",
-    \"lib\": [\"ES2022\", \"dom\"]
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "dom"]
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
   }
 }
+"""
+
+    @staticmethod
+    def _tsconfig_app_json() -> str:
+        return """{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": ["src/main.ts"],
+  "include": ["src/**/*.d.ts"]
+}
+"""
+
+    @staticmethod
+    def _gitignore() -> str:
+        return """/node_modules
+/dist
+/.angular
+/coverage
+*.log
+.DS_Store
+Thumbs.db
 """
 
     @staticmethod

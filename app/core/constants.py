@@ -14,11 +14,14 @@ ALLOWED_GENERATED_EXTENSIONS = {
     ".ts",
     ".html",
     ".css",
+    ".scss",
     ".js",
     ".env",
     ".conf",
     ".txt",
+    ".sql",
     ".gitignore",
+    ".dockerignore",
 }
 
 REQUIRED_SKELETON_DIRS = [

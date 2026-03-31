@@ -5,6 +5,7 @@ class ManifestBuilder:
             "backend/Dockerfile",
             "frontend/package.json",
             "frontend/Dockerfile",
+            "frontend/nginx.conf",
             "docker-compose.yml",
             "README.md",
             ".env.example",
