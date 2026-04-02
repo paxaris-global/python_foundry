@@ -1,13 +1,17 @@
+from typing import Optional
+
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
 from fastapi import APIRouter, status
 
 from app.api.deps import DBSession
+from app.core.exceptions import ServiceUnavailableException
 from app.core.security import sanitize_project_name
 from app.models.generation_cache import GenerationCache
 from app.models.job import Job, JobStatus
 from app.models.project import Project
+from app.schemas.common import ErrorResponse
 from app.schemas.generate import GenerateRequest, GenerateResponse
 from app.services.caching.fingerprint import FingerprintService
 from app.services.generation.prompt_parser import PromptParser
@@ -20,11 +24,11 @@ from app.utils.sanitizers import sanitize_feature_list
 from app.utils.download_utils import copy_project_to_downloads
 from app.core.logging import get_logger
 
-router = APIRouter(prefix="/generate", tags=["generation"])
+router = APIRouter(prefix="/generate", tags=["Generate"])
 logger = get_logger(__name__)
 
 
-def _build_effective_prompt(project_name: str, prompt: str | None, features: list[str]) -> str:
+def _build_effective_prompt(project_name: str, prompt: Optional[str], features: list[str]) -> str:
     if prompt:
         return prompt
 
@@ -33,16 +37,23 @@ def _build_effective_prompt(project_name: str, prompt: str | None, features: lis
         return (
             f"Generate a production-ready {project_name} application with Spring Boot backend and Angular frontend, "
             f"including the following features: {features_text}. "
-            "Include authentication, role-based access, clean architecture, Docker support, tests, and README."
+            "Create a professional, modern UI with Angular Material components, beautiful color schemes, "
+            "responsive design, and excellent user experience. Include authentication, role-based access, "
+            "clean architecture, Docker support, tests, and comprehensive documentation. "
+            "Use Material Design principles with attractive gradients, proper spacing, and intuitive navigation."
         )
 
     return (
         f"Generate a production-ready {project_name} application with Spring Boot backend and Angular frontend, "
-        "including authentication, role-based access, dashboard, CRUD modules, Docker support, tests, and README."
+        "featuring a professional, modern UI built with Angular Material. Include beautiful color schemes, "
+        "responsive design, intuitive navigation, and excellent user experience. Implement authentication, "
+        "role-based access control, clean architecture patterns, Docker containerization, comprehensive tests, "
+        "and detailed documentation. Use Material Design components with attractive gradients, proper spacing, "
+        "and modern styling throughout the application."
     )
 
 
-def _normalize_website_like(value: str | None) -> str | None:
+def _normalize_website_like(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
 
@@ -54,7 +65,7 @@ def _normalize_website_like(value: str | None) -> str | None:
     return cleaned[:120]
 
 
-def _discover_website_like(project_name: str) -> str | None:
+def _discover_website_like(project_name: str) -> Optional[str]:
     try:
         results = SearchClient().search(f"{project_name} official website", max_results=3)
     except Exception:
@@ -68,7 +79,20 @@ def _discover_website_like(project_name: str) -> str | None:
     return None
 
 
-@router.post("", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=GenerateResponse,
+    summary="Create a generation job",
+    description="Accepts a project specification and enqueues an asynchronous code-generation job. "
+                "Returns immediately with a job ID that can be polled via the Jobs endpoints. "
+                "If a cached result matching the request fingerprint exists, it is returned instantly.",
+    responses={
+        202: {"description": "Job accepted and enqueued (or served from cache)."},
+        422: {"description": "Invalid request payload.", "model": ErrorResponse},
+        503: {"description": "Service unavailable.", "model": ErrorResponse},
+    },
+)
 def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateResponse:
     safe_name = sanitize_project_name(payload.project_name)
     safe_features = sanitize_feature_list(payload.features)
@@ -192,13 +216,26 @@ def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateRe
         trace_id=trace_id,
         cache_hit=False,
     )
-    db.add(job)
-    db.commit()
-    db.refresh(job)
 
-    task = generate_project_task.apply_async(args=[str(job.id)], priority=5)
-    job.celery_task_id = task.id
-    db.commit()
+    try:
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+    except Exception:
+        logger.exception("Failed to persist generation job to database")
+        raise ServiceUnavailableException("Failed to create generation job due to a database error")
+
+    try:
+        task = generate_project_task.apply_async(args=[str(job.id)], priority=5)
+        job.celery_task_id = task.id
+        db.commit()
+    except Exception:
+        logger.exception("Failed to enqueue generation task for job=%s", job.id)
+        job.status = JobStatus.failed
+        job.error = "Failed to enqueue generation task"
+        job.current_stage = "failed"
+        db.commit()
+        raise ServiceUnavailableException("Failed to enqueue generation task. The task queue may be unavailable.")
 
     return GenerateResponse(
         job_id=str(job.id),

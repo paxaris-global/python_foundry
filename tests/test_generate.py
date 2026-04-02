@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from types import SimpleNamespace
+from typing import Optional
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -24,7 +27,7 @@ class _Query:
 
 
 class _FakeSession:
-    def __init__(self, cached: GenerationCache | None = None, project: Project | None = None):
+    def __init__(self, cached: Optional[GenerationCache] = None, project: Optional[Project] = None):
         self.cached = cached
         self.project = project
         self.created_jobs: list[Job] = []

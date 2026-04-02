@@ -1,3 +1,5 @@
+from typing import Optional
+
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -118,7 +120,7 @@ class WebDiscoveryOrchestrator:
 
     def persist_web_discovery_metadata(
         self,
-        job_id: UUID | None,
+        job_id: Optional[UUID],
         discovery_queries: list[str],
         ranked_sources: list[dict],
         knowledge: dict,
@@ -207,9 +209,9 @@ class WebDiscoveryOrchestrator:
     def discover(
         self,
         query: str,
-        job_id: UUID | None = None,
+        job_id: Optional[UUID] = None,
         module_type: str = "general",
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
     ) -> dict:
         tags = tags or []
         discovery_queries = [query]

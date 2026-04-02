@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -34,8 +36,8 @@ class RAGIndexer:
     def index_paths(
         self,
         paths: list[str],
-        module_type: str | None = None,
-        tags: list[str] | None = None,
+        module_type: Optional[str] = None,
+        tags: Optional[list[str]] = None,
         source_type: str = "repo",
     ) -> dict:
         tags = tags or []
@@ -84,7 +86,7 @@ class RAGIndexer:
         suffix = file_path.suffix.lower().lstrip(".")
         return suffix or "text"
 
-    def _prepare_file_chunks(self, file_path: Path) -> tuple[list[str], list[list[float]]] | None:
+    def _prepare_file_chunks(self, file_path: Path) -> Optional[tuple[list[str], list[list[float]]]]:
         if not file_path.is_file() or not self._is_supported(file_path) or not is_text_file(file_path):
             return None
 
@@ -103,7 +105,7 @@ class RAGIndexer:
         self,
         file_path: Path,
         chunks: list[str],
-        module_type: str | None,
+        module_type: Optional[str],
         tags: list[str],
         source_type: str,
     ) -> tuple[list[str], list[dict]]:
@@ -118,7 +120,7 @@ class RAGIndexer:
                 "language": language,
                 "module_type": module_type or "general",
                 "source_type": source_type,
-                "tags": tags,
+                "tags": ",".join(tags) if tags else "",
                 "chunk_index": idx,
             }
             ids.append(content_hash)

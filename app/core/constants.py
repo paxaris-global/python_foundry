@@ -31,6 +31,7 @@ REQUIRED_SKELETON_DIRS = [
     "frontend/src",
     "frontend/src/app",
     "_meta",
+    ".github/workflows",
 ]
 
 MANDATORY_OUTPUT_FILES = [

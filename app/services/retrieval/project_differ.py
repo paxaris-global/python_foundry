@@ -1,3 +1,5 @@
+from typing import Optional
+
 import re
 
 from app.models.project import Project
@@ -8,7 +10,7 @@ class ProjectDiffer:
     def _tokenize(value: str) -> set[str]:
         return {token for token in re.findall(r"\w+", value.lower()) if len(token) > 2}
 
-    def diff(self, base_project: Project, prompt: str, features: list[str], website_like: str | None) -> dict:
+    def diff(self, base_project: Project, prompt: str, features: list[str], website_like: Optional[str]) -> dict:
         base_features = set((base_project.manifest or {}).get("features", []))
         target_features = {item.strip().lower() for item in features if item.strip()}
 

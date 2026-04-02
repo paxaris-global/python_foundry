@@ -1,5 +1,7 @@
+from typing import Optional
+
 class BackendPatternExtractor:
-    def extract(self, page_data: dict, repo_analysis: dict | None = None) -> list[str]:
+    def extract(self, page_data: dict, repo_analysis: Optional[dict] = None) -> list[str]:
         repo_analysis = repo_analysis or {}
         text = (page_data.get("text") or "").lower()
 

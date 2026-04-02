@@ -1,3 +1,5 @@
+from typing import Optional
+
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String
@@ -15,4 +17,4 @@ class GenerationCache(Base, TimestampMixin):
     request_payload: Mapped[dict] = mapped_column(JSONB, default=dict)
     cache_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
     hit_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id"))
+    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id"))

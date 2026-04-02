@@ -1,0 +1,200 @@
+/* Global Styles for Angular Material Application */
+
+/* Import Google Fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Root variables for consistent theming */
+:root {
+  --primary-color: #1976d2;
+  --accent-color: #ff4081;
+  --warn-color: #f44336;
+  --background-color: #fafafa;
+  --surface-color: #ffffff;
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.54);
+  --text-disabled: rgba(0, 0, 0, 0.38);
+  --divider-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Global body styles */
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Material theme customizations */
+.mat-mdc-card {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.mat-mdc-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px) !important;
+}
+
+.mat-mdc-button {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.mat-mdc-raised-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mat-mdc-raised-button:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
+
+.mat-mdc-form-field {
+  margin-bottom: 16px !important;
+}
+
+.mat-mdc-form-field-outline {
+  border-radius: 8px !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  background: #fafafa !important;
+  border-radius: 8px !important;
+}
+
+.mat-mdc-toolbar {
+  border-radius: 0 0 16px 16px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Snackbar customizations */
+.success-snackbar {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%) !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%) !important;
+  color: white !important;
+}
+
+/* Table customizations */
+.mat-mdc-table {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.mat-mdc-header-row {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%) !important;
+}
+
+.mat-mdc-row:hover {
+  background: #f8f9fa !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.mat-mdc-paginator {
+  background: #f5f5f5 !important;
+  border-top: 1px solid var(--divider-color) !important;
+}
+
+/* Loading spinner customization */
+.mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: var(--primary-color) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+}
+
+/* Responsive design utilities */
+@media (max-width: 768px) {
+  .mat-mdc-card {
+    margin: 8px !important;
+  }
+
+  .mat-mdc-toolbar {
+    padding: 0 16px !important;
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Focus styles for accessibility */
+.mat-mdc-button:focus,
+.mat-mdc-form-field:focus,
+.mat-mdc-input-element:focus {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --primary-color: #0066cc;
+    --background-color: #ffffff;
+    --surface-color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

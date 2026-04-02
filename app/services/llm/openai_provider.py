@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -23,9 +23,9 @@ class OpenAIProvider(BaseLLMProvider):
     def _chat(
         self,
         prompt: str,
-        system_prompt: str | None = None,
+        system_prompt: Optional[str] = None,
         temperature: float = 0.2,
-        trace_id: str | None = None,
+        trace_id: Optional[str] = None,
     ) -> str:
         if self.settings.log_llm_prompts:
             safe_user_prompt = self._truncate_for_log(prompt)
@@ -64,14 +64,14 @@ class OpenAIProvider(BaseLLMProvider):
             logger.info("OpenAI usage=%s trace_id=%s", self.last_usage, trace_id)
         return response.choices[0].message.content or ""
 
-    def generate_text(self, prompt: str, system_prompt: str | None = None, trace_id: str | None = None) -> str:
+    def generate_text(self, prompt: str, system_prompt: Optional[str] = None, trace_id: Optional[str] = None) -> str:
         return self._chat(prompt=prompt, system_prompt=system_prompt, trace_id=trace_id)
 
     def generate_structured_json(
         self,
         prompt: str,
-        system_prompt: str | None = None,
-        trace_id: str | None = None,
+        system_prompt: Optional[str] = None,
+        trace_id: Optional[str] = None,
     ) -> dict[str, Any]:
         payload = self._chat(
             prompt=f"Return strict JSON only.\\n{prompt}",
@@ -92,8 +92,8 @@ class OpenAIProvider(BaseLLMProvider):
         self,
         prompt: str,
         language: str,
-        system_prompt: str | None = None,
-        trace_id: str | None = None,
+        system_prompt: Optional[str] = None,
+        trace_id: Optional[str] = None,
     ) -> str:
         content = self._chat(
             prompt=f"Generate {language} code only, without markdown fences.\\n{prompt}",
@@ -109,7 +109,7 @@ class OpenAIProvider(BaseLLMProvider):
             f'"echo_prompt": {json.dumps(compressed)} }}'
         )
 
-    def _truncate_for_log(self, value: str | None) -> str:
+    def _truncate_for_log(self, value: Optional[str]) -> str:
         if not value:
             return ""
         max_len = max(200, self.settings.llm_prompt_log_max_chars)

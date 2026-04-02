@@ -1,3 +1,5 @@
+from typing import Optional
+
 class DiscoveryDecider:
     DOMAIN_BENEFIT_KEYWORDS = {
         "crm",
@@ -26,7 +28,7 @@ class DiscoveryDecider:
         self,
         prompt: str,
         domain: str,
-        website_like: str | None,
+        website_like: Optional[str],
         strong_reusable_project: bool,
         rag_confidence: float,
         adaptation_score: float,

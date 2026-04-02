@@ -1,29 +1,60 @@
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Path as PathParam
 from fastapi.responses import FileResponse
 
 from app.api.deps import DBSession
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import AppException, NotFoundException, ServiceUnavailableException, ValidationException
+from app.core.logging import get_logger
 from app.models.project import Project
+from app.schemas.common import ErrorResponse
 from app.schemas.project import ProjectResponse
 from app.services.generation.zip_packager import ZipPackager
 
-router = APIRouter(prefix="/projects", tags=["projects"])
+router = APIRouter(prefix="/projects", tags=["Projects"])
+logger = get_logger(__name__)
 PROJECT_NOT_FOUND = "Project not found"
 
+ProjectIdPath = Annotated[str, PathParam(
+    description="UUID of the generated project (found in JobResponse.project_id once the job completes).",
+    examples=["c2f5b3e1-5678-1234-abcd-ef0123456789"],
+)]
 
-@router.get("/{project_id}")
-def get_project(project_id: str, db: DBSession) -> ProjectResponse:
+
+def _parse_project_uuid(project_id: str) -> UUID:
     try:
-        project_uuid = UUID(project_id)
+        return UUID(project_id)
     except ValueError as exc:
-        raise NotFoundException(PROJECT_NOT_FOUND) from exc
+        raise ValidationException(f"Invalid project ID format: {project_id}") from exc
 
-    project = db.query(Project).filter(Project.id == project_uuid).first()
+
+def _get_project_or_404(project_id: str, db) -> Project:
+    project_uuid = _parse_project_uuid(project_id)
+    try:
+        project = db.query(Project).filter(Project.id == project_uuid).first()
+    except Exception:
+        logger.exception("Database error fetching project=%s", project_id)
+        raise ServiceUnavailableException("Failed to retrieve project due to a database error")
     if not project:
         raise NotFoundException(PROJECT_NOT_FOUND)
+    return project
+
+
+@router.get(
+    "/{project_id}",
+    response_model=ProjectResponse,
+    summary="Get project details",
+    description="Retrieve full metadata for a generated project including file manifest, validation report, and RAG summary.",
+    responses={
+        404: {"description": "Project not found.", "model": ErrorResponse},
+        422: {"description": "Invalid project ID format.", "model": ErrorResponse},
+        503: {"description": "Service unavailable.", "model": ErrorResponse},
+    },
+)
+def get_project(project_id: ProjectIdPath, db: DBSession) -> ProjectResponse:
+    project = _get_project_or_404(project_id, db)
 
     return ProjectResponse(
         id=str(project.id),
@@ -45,18 +76,21 @@ def get_project(project_id: str, db: DBSession) -> ProjectResponse:
     )
 
 
-@router.get("/{project_id}/download")
-def download_project_zip(project_id: str, db: DBSession) -> FileResponse:
-    try:
-        project_uuid = UUID(project_id)
-    except ValueError as exc:
-        raise NotFoundException(PROJECT_NOT_FOUND) from exc
+@router.get(
+    "/{project_id}/download",
+    summary="Download project ZIP",
+    description="Stream the generated project as a ZIP archive. If the archive was removed, it is rebuilt from the project directory.",
+    response_class=FileResponse,
+    responses={
+        200: {"content": {"application/zip": {}}, "description": "ZIP archive of the generated project."},
+        404: {"description": "Project or ZIP artifact not found.", "model": ErrorResponse},
+        422: {"description": "Invalid project ID format.", "model": ErrorResponse},
+        503: {"description": "Service unavailable.", "model": ErrorResponse},
+    },
+)
+def download_project_zip(project_id: ProjectIdPath, db: DBSession) -> FileResponse:
+    project = _get_project_or_404(project_id, db)
 
-    project = db.query(Project).filter(Project.id == project_uuid).first()
-    if not project:
-        raise NotFoundException(PROJECT_NOT_FOUND)
-
-    # if the ZIP path is stale / removed, try to recreate from project directory
     zip_path = Path(project.zip_path)
     if not zip_path.exists():
         project_root = Path(project.project_path)
@@ -67,10 +101,11 @@ def download_project_zip(project_id: str, db: DBSession) -> FileResponse:
                 project.zip_path = str(zip_path)
                 db.commit()
                 db.refresh(project)
-            except Exception as exc:
-                raise NotFoundException(f"ZIP artifact not found: {exc}") from exc
+            except Exception:
+                logger.exception("Failed to rebuild ZIP for project=%s", project_id)
+                raise AppException("Failed to rebuild project archive")
         else:
-            raise NotFoundException("ZIP artifact not found")
+            raise NotFoundException("ZIP artifact not found and project directory is missing")
 
     return FileResponse(
         path=str(zip_path),

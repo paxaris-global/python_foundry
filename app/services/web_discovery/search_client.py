@@ -1,3 +1,5 @@
+from typing import Optional
+
 from urllib.parse import quote_plus
 
 import httpx
@@ -14,7 +16,7 @@ class SearchClient:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def search(self, query: str, max_results: int | None = None) -> list[dict]:
+    def search(self, query: str, max_results: Optional[int] = None) -> list[dict]:
         limit = max_results or self.settings.max_web_results
         results: list[dict] = []
 

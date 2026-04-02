@@ -12,22 +12,44 @@ from app.utils.download_utils import copy_project_to_downloads
 
 logger = get_logger(__name__)
 
+RETRYABLE_EXCEPTIONS = (OperationalError, ConnectionError, TimeoutError)
+
+
+def _mark_job_failed(db, job_id: str, error_message: str) -> None:
+    """Reload the job in a clean state and mark it as failed."""
+    try:
+        db.rollback()
+        job = db.query(Job).filter(Job.id == UUID(job_id)).first()
+        if job:
+            job.status = JobStatus.failed
+            job.current_stage = "failed"
+            job.error = error_message
+            db.commit()
+            logger.info("[celery] job=%s marked as failed: %s", job_id, error_message)
+    except Exception:
+        logger.exception("[celery] Failed to mark job=%s as failed in database", job_id)
+
 
 @celery_app.task(
     bind=True,
-    autoretry_for=(OperationalError, ConnectionError, TimeoutError),
+    autoretry_for=RETRYABLE_EXCEPTIONS,
     retry_backoff=True,
     retry_kwargs={"max_retries": 3},
 )
 def generate_project_task(self: Task, job_id: str) -> dict:
+    logger.info("[celery] generate_project_task received job_id=%s task_id=%s retry=%s",
+                job_id, self.request.id, self.request.retries)
     db = SessionLocal()
     try:
         job_uuid = UUID(job_id)
         job = db.query(Job).filter(Job.id == job_uuid).first()
+        logger.info("[celery] job loaded: %s status=%s", job_id, job.status if job else "NOT_FOUND")
         if not job:
+            logger.error("[celery] Job not found in database: %s", job_id)
             raise ValueError(f"Job not found: {job_id}")
 
         if job.status == JobStatus.completed and job.result_data:
+            logger.info("[celery] job=%s already completed, returning cached result", job_id)
             return job.result_data
 
         job.status = JobStatus.running
@@ -37,12 +59,17 @@ def generate_project_task(self: Task, job_id: str) -> dict:
         db.commit()
 
         def progress_callback(progress: int, stage: str) -> None:
-            job.progress = progress
-            job.current_stage = stage
-            existing = job.result_data or {}
-            job.result_data = {**existing, "stage": stage}
-            db.commit()
+            try:
+                job.progress = progress
+                job.current_stage = stage
+                existing = job.result_data or {}
+                job.result_data = {**existing, "stage": stage}
+                db.commit()
+            except Exception:
+                logger.warning("[celery] Failed to update progress for job=%s stage=%s", job_id, stage)
+                db.rollback()
 
+        logger.info("[celery] invoking GenerationOrchestrator.run for job=%s", job_id)
         orchestrator = GenerationOrchestrator(db=db)
         result = orchestrator.run(
             project_name=job.project_name,
@@ -66,30 +93,35 @@ def generate_project_task(self: Task, job_id: str) -> dict:
         job.stage_timings = result.get("stage_timings", {})
         job.result_data = result
         db.commit()
+        logger.info("[celery] job=%s completed successfully", job_id)
 
-        # Automatically download the project to Downloads folder
         try:
             zip_path = result.get("zip_path")
             if zip_path:
                 download_path = copy_project_to_downloads(zip_path, job.project_name)
-                logger.info(f"Project auto-downloaded to: {download_path}")
-                # Store the download path in result_data for reference
-                job.result_data["download_path"] = download_path
+                logger.info("Project auto-downloaded to: %s", download_path)
+                job.result_data = {**job.result_data, "download_path": download_path}
                 db.commit()
-        except Exception as exc:
-            logger.error(f"Failed to auto-download project: {exc}")
-            # Don't fail the entire job if download fails, just log it
+        except Exception:
+            logger.warning("[celery] Failed to auto-download project for job=%s", job_id, exc_info=True)
 
         return result
-    except Exception as exc:
-        logger.exception("Generation task failed")
-        db.rollback()
-        job = db.query(Job).filter(Job.id == UUID(job_id)).first()
-        if job:
-            job.status = JobStatus.failed
-            job.current_stage = "failed"
-            job.error = str(exc)
-            db.commit()
+
+    except RETRYABLE_EXCEPTIONS as exc:
+        retries = self.request.retries
+        max_retries = self.retry_kwargs.get("max_retries", 3)
+        logger.warning(
+            "[celery] Retryable error for job=%s (attempt %d/%d): %s",
+            job_id, retries + 1, max_retries, type(exc).__name__,
+        )
+        if retries >= max_retries:
+            _mark_job_failed(db, job_id, f"Failed after {max_retries} retries: {type(exc).__name__}")
         raise
+
+    except Exception as exc:
+        logger.exception("[celery] Generation task failed permanently for job=%s", job_id)
+        _mark_job_failed(db, job_id, str(exc)[:500])
+        raise
+
     finally:
         db.close()

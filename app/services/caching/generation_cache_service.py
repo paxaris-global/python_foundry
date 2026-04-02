@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.models.generation_cache import GenerationCache
@@ -8,7 +10,7 @@ class GenerationCacheService:
     def __init__(self, db: Session):
         self.db = db
 
-    def lookup(self, fingerprint: str) -> GenerationCache | None:
+    def lookup(self, fingerprint: str) -> Optional[GenerationCache]:
         cache = self.db.query(GenerationCache).filter(GenerationCache.fingerprint == fingerprint).first()
         if cache:
             cache.hit_count += 1

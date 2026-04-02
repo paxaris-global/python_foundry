@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.utils.json_utils import to_pretty_json
 
 
@@ -5,8 +7,8 @@ class MergeEngine:
     def merge_contexts(
         self,
         base_enriched_prompt: str,
-        adaptation_context: dict | None,
-        web_discovery_summary: dict | None,
+        adaptation_context: Optional[dict],
+        web_discovery_summary: Optional[dict],
     ) -> str:
         payload = [base_enriched_prompt]
 

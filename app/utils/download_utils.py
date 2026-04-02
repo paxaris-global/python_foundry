@@ -1,3 +1,5 @@
+from typing import Optional
+
 import shutil
 from pathlib import Path
 
@@ -7,7 +9,7 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-def copy_project_to_downloads(zip_path: str, project_name: str, downloads_folder: str | None = None) -> str:
+def copy_project_to_downloads(zip_path: str, project_name: str, downloads_folder: Optional[str] = None) -> str:
     """
     Copy the generated project zip file to the specified Downloads folder.
 

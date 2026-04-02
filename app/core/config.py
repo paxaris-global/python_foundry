@@ -1,3 +1,5 @@
+from typing import Optional
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -24,17 +26,17 @@ class Settings(BaseSettings):
     celery_result_backend: str = Field(default="redis://localhost:6379/1", alias="CELERY_RESULT_BACKEND")
 
     chroma_persist_directory: str = Field(default="./chroma_data", alias="CHROMA_PERSIST_DIRECTORY")
-    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     embedding_model: str = Field(default="text-embedding-3-small", alias="EMBEDDING_MODEL")
     log_llm_prompts: bool = Field(default=False, alias="LOG_LLM_PROMPTS")
     llm_prompt_log_max_chars: int = Field(default=20000, alias="LLM_PROMPT_LOG_MAX_CHARS")
 
     search_provider: str = Field(default="serpapi", alias="SEARCH_PROVIDER")
-    search_api_key: str | None = Field(default=None, alias="SEARCH_API_KEY")
+    search_api_key: Optional[str] = Field(default=None, alias="SEARCH_API_KEY")
     search_engine: str = Field(default="google_light", alias="SEARCH_ENGINE")
     fallback_search_provider: str = Field(default="duckduckgo", alias="FALLBACK_SEARCH_PROVIDER")
-    github_token: str | None = Field(default=None, alias="GITHUB_TOKEN")
+    github_token: Optional[str] = Field(default=None, alias="GITHUB_TOKEN")
     search_timeout_seconds: int = Field(default=10, alias="SEARCH_TIMEOUT_SECONDS")
     enable_playwright: bool = Field(default=False, alias="ENABLE_PLAYWRIGHT")
     allowed_web_domains: str = Field(default="github.com,docs.github.com,spring.io,angular.dev", alias="ALLOWED_WEB_DOMAINS")
@@ -50,7 +52,7 @@ class Settings(BaseSettings):
     max_zip_size_mb: int = Field(default=50, alias="MAX_ZIP_SIZE_MB")
     rag_min_similarity: float = Field(default=0.0, alias="RAG_MIN_SIMILARITY")
 
-    downloads_dir_path: str | None = Field(default=None, alias="DOWNLOADS_DIR")
+    downloads_dir_path: Optional[str] = Field(default=None, alias="DOWNLOADS_DIR")
 
     @property
     def sqlalchemy_database_url(self) -> str:

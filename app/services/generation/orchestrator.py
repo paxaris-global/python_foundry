@@ -1,7 +1,7 @@
 import json
 import time
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
@@ -147,14 +147,18 @@ class GenerationOrchestrator:
         backend: str,
         frontend: str,
         features: list[str],
-        progress_callback: Callable[[int, str], None] | None = None,
-        fingerprint: str | None = None,
-        trace_id: str | None = None,
-        job_id: UUID | None = None,
-        website_like: str | None = None,
+        progress_callback: Optional[Callable[[int, str], None]] = None,
+        fingerprint: Optional[str] = None,
+        trace_id: Optional[str] = None,
+        job_id: Optional[UUID] = None,
+        website_like: Optional[str] = None,
         mode_preference: str = "auto",
     ) -> dict:
         del trace_id
+        logger.info(
+            "[orchestrator] run start: project=%s backend=%s frontend=%s job_id=%s mode=%s",
+            project_name, backend, frontend, job_id, mode_preference,
+        )
         self.pipeline.stage_timings = {}
         stage_progress = self._stage_progress_map()
 
@@ -836,7 +840,7 @@ class GenerationOrchestrator:
         }
 
     @staticmethod
-    def select_base_project(execution: dict) -> Project | None:
+    def select_base_project(execution: dict) -> Optional[Project]:
         return execution.get("selected")
 
     def retrieve_rag_context(
@@ -844,7 +848,7 @@ class GenerationOrchestrator:
         prompt: str,
         domain: str,
         expanded_features: list[str],
-        selected_base: Project | None,
+        selected_base: Optional[Project],
     ) -> list[dict]:
         query_parts = [prompt, domain, " ".join(expanded_features)]
         if selected_base:
@@ -868,7 +872,7 @@ class GenerationOrchestrator:
         self,
         prompt: str,
         domain: str,
-        website_like: str | None,
+        website_like: Optional[str],
         execution: dict,
         rag_context_summary: dict,
     ) -> dict:
@@ -885,7 +889,7 @@ class GenerationOrchestrator:
         self,
         prompt: str,
         domain: str,
-        website_like: str | None,
+        website_like: Optional[str],
         expanded_features: list[str],
         discovery_decision: dict,
     ) -> list[str]:
@@ -916,7 +920,7 @@ class GenerationOrchestrator:
 
     def persist_web_discovery_metadata(
         self,
-        job_id: UUID | None,
+        job_id: Optional[UUID],
         discovery_queries: list[str],
         ranked_sources: list[dict],
         extracted_knowledge: dict,
@@ -970,7 +974,7 @@ class GenerationOrchestrator:
         domain: str,
         execution: dict,
         scaffold_strategy: dict,
-        selected_base: Project | None,
+        selected_base: Optional[Project],
         web_discovery_summary: dict,
     ) -> dict:
         merged_features = sorted(set(expanded_features + web_discovery_summary.get("extracted_features", [])))
@@ -1044,7 +1048,7 @@ class GenerationOrchestrator:
 
     def persist_prompt_artifacts(
         self,
-        job_id: UUID | None,
+        job_id: Optional[UUID],
         prompt: str,
         parsed_prompt: dict,
         expanded_features: list[str],
@@ -1053,7 +1057,7 @@ class GenerationOrchestrator:
         web_discovery_summary: dict,
         adaptation_context_summary: dict,
         ranked_sources: list[dict],
-        pre_final_prompt: str | None,
+        pre_final_prompt: Optional[str],
         final_enriched_prompt: str,
     ):
         if not job_id:
@@ -1207,7 +1211,7 @@ class GenerationOrchestrator:
     def finalize_job_status(
         self,
         result: dict,
-        project_root: Path | None,
+        project_root: Optional[Path],
         artifact,
         cache_result: dict,
         indexing_result: dict,
@@ -1228,7 +1232,7 @@ class GenerationOrchestrator:
             raise ValidationException("ZIP artifact was not created")
 
     @staticmethod
-    def _validate_required_artifacts(project_root: Path | None) -> None:
+    def _validate_required_artifacts(project_root: Optional[Path]) -> None:
         if not project_root:
             return
         for required_file in MANDATORY_OUTPUT_FILES:
@@ -1254,10 +1258,10 @@ class GenerationOrchestrator:
     def build_adaptation_context(
         self,
         execution_mode: str,
-        selected_base: Project | None,
+        selected_base: Optional[Project],
         prompt: str,
         expanded_features: list[str],
-        website_like: str | None,
+        website_like: Optional[str],
     ) -> dict:
         if execution_mode not in {"adapt", "hybrid_scaffold"} or not selected_base:
             return {}
@@ -1289,7 +1293,7 @@ class GenerationOrchestrator:
 
     def build_prompt_files_payload(
         self,
-        job_id: UUID | None,
+        job_id: Optional[UUID],
         project_id: UUID,
         prompt: str,
         parsed_prompt: dict,
@@ -1352,8 +1356,8 @@ class GenerationOrchestrator:
         request_fingerprint: str,
         execution_mode: str,
         cache_hit: bool,
-        selection_score: float | None = None,
-        selection_candidates: list[dict] | None = None,
+        selection_score: Optional[float] = None,
+        selection_candidates: Optional[list[dict]] = None,
     ) -> dict:
         result = {
             "project_id": str(project.id),

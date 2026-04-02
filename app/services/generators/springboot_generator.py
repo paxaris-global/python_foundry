@@ -77,6 +77,7 @@ class SpringBootGenerator(BaseGenerator):
             "backend/.gitignore": self._gitignore(),
             f"backend/src/test/java/{package_path}/{app_class}Tests.java": self._test_java(package, app_class),
             f"backend/src/test/java/{package_path}/service/CustomerServiceImplTest.java": self._customer_service_test(package),
+            ".github/workflows/trigger.yml": self._trigger_workflow(),
         }
         return files
 
@@ -93,6 +94,35 @@ class SpringBootGenerator(BaseGenerator):
 .vscode/
 .DS_Store
 HELP.md
+"""
+
+    @staticmethod
+    def _trigger_workflow() -> str:
+        return """name: Trigger Central CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  trigger-central-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Central Workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          repository: paxaris-global/paxo
+          event-type: build-image
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "ref_name": "${{ github.ref_name }}",
+              "ref": "${{ github.ref }}",
+              "sha": "${{ github.sha }}"
+            }
 """
 
     @staticmethod

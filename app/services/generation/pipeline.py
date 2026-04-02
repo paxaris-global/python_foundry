@@ -1,3 +1,5 @@
+from typing import Optional
+
 import time
 from collections.abc import Callable
 
@@ -15,11 +17,12 @@ class GenerationPipeline:
         self,
         stage: str,
         fn: Callable,
-        progress_callback: Callable[[int, str], None] | None,
+        progress_callback: Optional[Callable[[int, str], None]],
         progress: int,
         *args,
         **kwargs,
     ):
+        logger.info("stage=%s starting (progress=%d)", stage, progress)
         if progress_callback:
             progress_callback(progress, stage)
 

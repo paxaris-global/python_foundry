@@ -1,20 +1,22 @@
+from typing import Union
+
 import os
 from pathlib import Path
 
 
-def ensure_directory(path: str | Path) -> Path:
+def ensure_directory(path: Union[str, Path]) -> Path:
     target = Path(path)
     target.mkdir(parents=True, exist_ok=True)
     return target
 
 
-def write_text_file(path: str | Path, content: str) -> None:
+def write_text_file(path: Union[str, Path], content: str) -> None:
     target = Path(path)
     ensure_directory(target.parent)
     target.write_text(content, encoding="utf-8")
 
 
-def list_files_recursive(root: str | Path) -> list[Path]:
+def list_files_recursive(root: Union[str, Path]) -> list[Path]:
     root_path = Path(root)
     if not root_path.exists():
         return []
@@ -29,5 +31,5 @@ def is_text_file(path: Path) -> bool:
         return False
 
 
-def safe_relative_path(base: str | Path, child: str | Path) -> str:
+def safe_relative_path(base: Union[str, Path], child: Union[str, Path]) -> str:
     return os.path.relpath(str(child), str(base)).replace("\\", "/")

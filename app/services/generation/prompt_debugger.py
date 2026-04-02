@@ -1,3 +1,5 @@
+from typing import Optional
+
 import json
 from pathlib import Path
 from uuid import UUID
@@ -30,9 +32,9 @@ class PromptDebugger:
         web_discovery_summary: dict,
         adaptation_context_summary: dict,
         trusted_sources: list[dict],
-        pre_final_prompt: str | None,
+        pre_final_prompt: Optional[str],
         final_enriched_prompt: str,
-        system_prompt: str | None,
+        system_prompt: Optional[str],
     ) -> PromptArtifact:
         artifact = PromptArtifact(
             job_id=job_id,
@@ -98,7 +100,7 @@ class PromptDebugger:
         self.db.refresh(artifact)
         return artifact
 
-    def get_by_job_id(self, job_id: UUID) -> PromptArtifact | None:
+    def get_by_job_id(self, job_id: UUID) -> Optional[PromptArtifact]:
         return (
             self.db.query(PromptArtifact)
             .filter(PromptArtifact.job_id == job_id)

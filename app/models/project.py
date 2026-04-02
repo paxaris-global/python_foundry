@@ -1,3 +1,5 @@
+from typing import Optional
+
 import uuid
 
 from sqlalchemy import String, Text
@@ -17,13 +19,13 @@ class Project(Base, TimestampMixin):
     frontend_stack: Mapped[str] = mapped_column(String(50), nullable=False)
     execution_mode: Mapped[str] = mapped_column(String(30), default="generate", nullable=False)
     domain: Mapped[str] = mapped_column(String(100), default="general", nullable=False)
-    blueprint_used: Mapped[str | None] = mapped_column(String(120))
+    blueprint_used: Mapped[Optional[str]] = mapped_column(String(120))
     project_path: Mapped[str] = mapped_column(Text, nullable=False)
     zip_path: Mapped[str] = mapped_column(Text, nullable=False)
     manifest: Mapped[dict] = mapped_column(JSONB, default=dict)
     rag_summary: Mapped[dict] = mapped_column(JSONB, default=dict)
     cache_info: Mapped[dict] = mapped_column(JSONB, default=dict)
-    final_prompt_text_path: Mapped[str | None] = mapped_column(Text)
-    final_prompt_json_path: Mapped[str | None] = mapped_column(Text)
+    final_prompt_text_path: Mapped[Optional[str]] = mapped_column(Text)
+    final_prompt_json_path: Mapped[Optional[str]] = mapped_column(Text)
     generated_files: Mapped[list[str]] = mapped_column(JSONB, default=list)
     validation_report: Mapped[dict] = mapped_column(JSONB, default=dict)
