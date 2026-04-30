@@ -558,6 +558,22 @@ class GenerationOrchestrator:
                 api_contract,
                 rag_context,
             )
+
+            # LLM-powered code improvement step for frontend files
+            from app.services.llm.openai_provider import OpenAIProvider
+            llm = OpenAIProvider()
+            for file_path, file_content in frontend_files.items():
+                if file_path.endswith((".html", ".css", ".ts")):
+                    llm_prompt = (
+                        f"User prompt: {prompt}\n"
+                        f"File: {file_path}\n"
+                        "Rewrite or improve this file for a modern, professional UI/UX, "
+                        "adding or updating features as described in the prompt. "
+                        "Return only the updated file content."
+                    )
+                    improved_content = llm.generate_code_block(prompt=llm_prompt, language="text")
+                    if improved_content and improved_content.strip():
+                        frontend_files[file_path] = improved_content
             docker_files = self.pipeline.execute_stage(
                 "generate_docker_files",
                 self.generate_docker_files,
