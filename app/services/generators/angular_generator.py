@@ -23,7 +23,7 @@ class AngularGenerator(BaseGenerator):
             "frontend/.gitignore": self._gitignore(),
             "frontend/src/main.ts": self._main_ts(),
             "frontend/src/index.html": self._index_html(app_name),
-            "frontend/src/styles.css": self._styles_css(),
+            "frontend/src/styles.css": self.renderer.render(TemplateRegistry.ANGULAR_STYLES_CSS.path, ctx),
             "frontend/src/app/app.module.ts": self.renderer.render(TemplateRegistry.ANGULAR_APP_MODULE.path, ctx),
             "frontend/src/app/app-routing.module.ts": self.renderer.render(TemplateRegistry.ANGULAR_APP_ROUTING.path, ctx),
             "frontend/src/app/app.component.ts": self._app_component_ts(),
@@ -38,7 +38,10 @@ class AngularGenerator(BaseGenerator):
               TemplateRegistry.ANGULAR_COMPONENT_HTML.path,
               ctx,
             ),
-            "frontend/src/app/features/customers/components/customer-list.component.css": self._customer_component_css(),
+            "frontend/src/app/features/customers/components/customer-list.component.css": self.renderer.render(
+              TemplateRegistry.ANGULAR_COMPONENT_CSS.path,
+              ctx,
+            ),
             "frontend/src/app/features/customers/customers.module.ts": self._customers_module_ts(),
             "frontend/src/environments/environment.ts": self.renderer.render(
               TemplateRegistry.ANGULAR_ENVIRONMENT.path,
@@ -167,26 +170,6 @@ platformBrowserDynamic()
 </html>
 """
 
-    @staticmethod
-    def _styles_css() -> str:
-        return """:root {
-  --bg: #f8fbf9;
-  --ink: #152018;
-  --brand: #1b8f5a;
-  --brand-ink: #ffffff;
-}
-
-html, body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: radial-gradient(circle at top left, #ffffff 0%, var(--bg) 60%);
-  color: var(--ink);
-}
-
-* {
-  box-sizing: border-box;
-}
-"""
 
     @staticmethod
     def _app_component_ts() -> str:
@@ -236,12 +219,6 @@ header h1 {
 }
 """
 
-    @staticmethod
-    def _customer_component_css() -> str:
-        return """h2 {
-  margin-top: 0;
-}
-"""
 
     @staticmethod
     def _customers_module_ts() -> str:

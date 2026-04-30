@@ -27,9 +27,11 @@ class TemplateRegistry:
     ANGULAR_APP_ROUTING = TemplateRef("angular_app_routing", "angular/app-routing.module.ts.j2")
     ANGULAR_COMPONENT = TemplateRef("angular_component", "angular/component.ts.j2")
     ANGULAR_COMPONENT_HTML = TemplateRef("angular_component_html", "angular/component.html.j2")
+    ANGULAR_COMPONENT_CSS = TemplateRef("angular_component_css", "angular/component.css.j2")
     ANGULAR_SERVICE = TemplateRef("angular_service", "angular/service.ts.j2")
     ANGULAR_DOCKERFILE = TemplateRef("angular_dockerfile", "angular/Dockerfile.j2")
     ANGULAR_ENVIRONMENT = TemplateRef("angular_environment", "angular/environment.ts.j2")
+    ANGULAR_STYLES_CSS = TemplateRef("angular_styles_css", "angular/styles.css.j2")
 
     DOCKER_COMPOSE = TemplateRef("docker_compose", "docker/docker-compose.yml.j2")
     README = TemplateRef("docs_readme", "docs/README.md.j2")

@@ -1,176 +1,150 @@
 <div class="customer-management">
-  <!-- App Bar -->
   <mat-toolbar color="primary" class="app-toolbar">
     <mat-toolbar-row>
-      <span class="app-title">{{ project_name | title }} Management System</span>
+      <span class="app-title">{{ project_name | title }} CRM</span>
       <span class="spacer"></span>
-      <button mat-icon-button [matMenuTriggerFor]="menu">
+
+      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Open menu">
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
-        <button mat-menu-item>
+        <button mat-menu-item (click)="startAdd()">
+          <mat-icon>add</mat-icon>
+          <span>Add Customer</span>
+        </button>
+        <button mat-menu-item disabled>
           <mat-icon>settings</mat-icon>
           <span>Settings</span>
-        </button>
-        <button mat-menu-item>
-          <mat-icon>help</mat-icon>
-          <span>Help</span>
         </button>
       </mat-menu>
     </mat-toolbar-row>
   </mat-toolbar>
 
   <div class="content-container">
-    <!-- Welcome Card -->
-    <mat-card class="welcome-card" *ngIf="!customers || customers.length === 0">
+    <mat-card class="hero-card" *ngIf="!loading && customers.length === 0 && !showAddForm">
       <mat-card-header>
-        <mat-card-title>Welcome to {{ project_name | title }} Management</mat-card-title>
-        <mat-card-subtitle>Manage your {{ entity_name | lowercase }} data efficiently</mat-card-subtitle>
+        <mat-card-title>Welcome</mat-card-title>
+        <mat-card-subtitle>Start by creating your first customer</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <p>Get started by adding your first {{ entity_name | lowercase }} or importing existing data.</p>
+        <p>This starter UI ships with Angular Material, responsive layout, search, validation, and accessible components.</p>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-raised-button color="primary" (click)="showAddForm = true">
+        <button mat-raised-button color="primary" (click)="startAdd()">
           <mat-icon>add</mat-icon>
-          Add {{ entity_name }}
-        </button>
-        <button mat-button>
-          <mat-icon>cloud_upload</mat-icon>
-          Import Data
+          Add Customer
         </button>
       </mat-card-actions>
     </mat-card>
 
-    <!-- Add/Edit Customer Form -->
-    <mat-card class="form-card" *ngIf="showAddForm || (isEditMode && selectedCustomer)">
+    <mat-card class="form-card" *ngIf="showAddForm">
       <mat-card-header>
-        <mat-card-title>{{ isEditMode ? 'Edit' : 'Add New' }} {{ entity_name }}</mat-card-title>
-        <mat-card-subtitle>{{ isEditMode ? 'Update' : 'Create' }} {{ entity_name | lowercase }} information</mat-card-subtitle>
+        <mat-card-title [textContent]="isEditMode ? 'Edit Customer' : 'Add Customer'"></mat-card-title>
+        <mat-card-subtitle [textContent]="isEditMode ? 'Update customer details' : 'Create a new customer'"></mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>
         <form [formGroup]="addForm" (ngSubmit)="isEditMode ? updateCustomer() : addCustomer()" class="customer-form">
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>{{ entity_name }} Name</mat-label>
-              <input matInput
-                     formControlName="name"
-                     placeholder="Enter {{ entity_name | lowercase }} name"
-                     [class.is-invalid]="isFieldInvalid(addForm, 'name')">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g. Alex Johnson" />
               <mat-icon matSuffix>person</mat-icon>
-              <mat-error *ngIf="isFieldInvalid(addForm, 'name')">
-                {{ getFieldErrorMessage(addForm, 'name') }}
-              </mat-error>
+              <mat-error *ngIf="isFieldInvalid(addForm, 'name')" [textContent]="getFieldErrorMessage(addForm, 'name')"></mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Email Address</mat-label>
-              <input matInput
-                     type="email"
-                     formControlName="email"
-                     placeholder="email@example.com"
-                     [class.is-invalid]="isFieldInvalid(addForm, 'email')">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="alex@example.com" />
               <mat-icon matSuffix>email</mat-icon>
-              <mat-error *ngIf="isFieldInvalid(addForm, 'email')">
-                {{ getFieldErrorMessage(addForm, 'email') }}
-              </mat-error>
+              <mat-error *ngIf="isFieldInvalid(addForm, 'email')" [textContent]="getFieldErrorMessage(addForm, 'email')"></mat-error>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Company</mat-label>
-              <input matInput
-                     formControlName="company"
-                     placeholder="Company name (optional)">
+              <input matInput formControlName="company" placeholder="Optional" />
               <mat-icon matSuffix>business</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Phone Number</mat-label>
-              <input matInput
-                     formControlName="phone"
-                     placeholder="+1 (555) 123-4567">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone" placeholder="Optional" />
               <mat-icon matSuffix>phone</mat-icon>
             </mat-form-field>
           </div>
 
           <mat-form-field appearance="outline" class="form-field full-width">
             <mat-label>Address</mat-label>
-            <textarea matInput
-                      formControlName="address"
-                      placeholder="Full address"
-                      rows="3"></textarea>
+            <textarea matInput formControlName="address" rows="3" placeholder="Optional"></textarea>
             <mat-icon matSuffix>location_on</mat-icon>
           </mat-form-field>
         </form>
       </mat-card-content>
 
       <mat-card-actions align="end">
-        <button mat-button (click)="cancelEdit()">
-          <mat-icon>cancel</mat-icon>
-          Cancel
+        <button mat-button (click)="cancelEdit()" [disabled]="loading">
+          <mat-icon>close</mat-icon>
+          Close
         </button>
-        <button mat-raised-button
-                color="primary"
-                [disabled]="addForm.invalid || loading"
-                (click)="isEditMode ? updateCustomer() : addCustomer()">
-          <mat-icon *ngIf="!loading">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        <button mat-raised-button color="primary" [disabled]="addForm.invalid || loading" (click)="isEditMode ? updateCustomer() : addCustomer()">
+          <mat-icon *ngIf="!loading" [textContent]="isEditMode ? 'save' : 'add'"></mat-icon>
           <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-          {{ isEditMode ? 'Update' : 'Add' }} {{ entity_name }}
+          <span [textContent]="isEditMode ? 'Save changes' : 'Create'"></span>
         </button>
       </mat-card-actions>
     </mat-card>
 
-    <!-- Customers Table -->
-    <mat-card class="table-card" *ngIf="customers && customers.length > 0">
+    <mat-card class="table-card" *ngIf="customers.length > 0">
       <mat-card-header>
-        <mat-card-title>{{ entity_name }}s List</mat-card-title>
-        <mat-card-subtitle>{{ customers.length }} {{ entity_name | lowercase }}(s) found</mat-card-subtitle>
+        <mat-card-title>Customers</mat-card-title>
+        <mat-card-subtitle [textContent]="dataSource.filteredData.length + ' shown'"></mat-card-subtitle>
         <div class="card-header-actions">
-          <button mat-raised-button color="primary" (click)="showAddForm = true" *ngIf="!showAddForm">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Search</mat-label>
+            <input matInput [value]="filterValue" (input)="applyFilter($any($event.target).value)" placeholder="Name, email, company" />
+            <button mat-icon-button matSuffix aria-label="Clear" *ngIf="filterValue" (click)="applyFilter('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="startAdd()" *ngIf="!showAddForm">
             <mat-icon>add</mat-icon>
-            Add {{ entity_name }}
+            Add
           </button>
         </div>
       </mat-card-header>
 
       <mat-card-content>
         <div class="table-container">
-          <table mat-table [dataSource]="customers" matSort class="customers-table">
-
-            <!-- Name Column -->
+          <table mat-table [dataSource]="dataSource" matSort class="customers-table">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
               <td mat-cell *matCellDef="let customer">
                 <div class="customer-name">
                   <mat-icon class="customer-avatar">person</mat-icon>
-                  {{ customer.name }}
+                  <span [textContent]="customer.name"></span>
                 </div>
               </td>
             </ng-container>
 
-            <!-- Email Column -->
             <ng-container matColumnDef="email">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-              <td mat-cell *matCellDef="let customer">{{ customer.email }}</td>
+              <td mat-cell *matCellDef="let customer"><span [textContent]="customer.email"></span></td>
             </ng-container>
 
-            <!-- Company Column -->
             <ng-container matColumnDef="company">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Company</th>
-              <td mat-cell *matCellDef="let customer">{{ customer.company || '-' }}</td>
+              <td mat-cell *matCellDef="let customer"><span [textContent]="customer.company || '-'"></span></td>
             </ng-container>
 
-            <!-- Actions Column -->
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef>Actions</th>
               <td mat-cell *matCellDef="let customer">
-                <button mat-icon-button color="primary" (click)="editCustomer(customer)" matTooltip="Edit">
+                <button mat-icon-button color="primary" (click)="editCustomer(customer)" aria-label="Edit">
                   <mat-icon>edit</mat-icon>
                 </button>
-                <button mat-icon-button color="warn" (click)="deleteCustomer(customer)" matTooltip="Delete">
+                <button mat-icon-button color="warn" (click)="deleteCustomer(customer)" aria-label="Delete">
                   <mat-icon>delete</mat-icon>
                 </button>
               </td>
@@ -185,213 +159,9 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Loading Spinner -->
-    <div *ngIf="loading && !customers" class="loading-container">
+    <div *ngIf="loading && customers.length === 0" class="loading-container">
       <mat-spinner diameter="50"></mat-spinner>
-      <p>Loading {{ entity_name | lowercase }}s...</p>
-    </div>
-  </div>
-</div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="add-email" class="required">Email</label>
-            <input
-              id="add-email"
-              type="email"
-              formControlName="email"
-              class="form-control"
-              [class.error]="isFieldInvalid(addForm, 'email')"
-              placeholder="customer@example.com"
-              aria-describedby="add-email-error"
-            />
-            <div *ngIf="isFieldInvalid(addForm, 'email')" class="error-message" id="add-email-error">
-              {{ getFieldErrorMessage(addForm, 'email') }}
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="add-company">Company</label>
-          <input
-            id="add-company"
-            type="text"
-            formControlName="company"
-            class="form-control"
-            placeholder="Company name (optional)"
-          />
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            [disabled]="addForm.invalid || loading"
-            [class.btn-loading]="loading"
-          >
-            <span *ngIf="!loading">Add Customer</span>
-            <span *ngIf="loading">Adding...</span>
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="addForm.reset()">Clear Form</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Edit Customer Form -->
-    <div *ngIf="isEditMode && selectedCustomer" class="form-section edit-section">
-      <div class="form-header">
-        <h2>Edit Customer</h2>
-        <p>Modify the customer information below.</p>
-      </div>
-
-      <form [formGroup]="editForm" (ngSubmit)="updateCustomer()" class="customer-form" novalidate>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="edit-name" class="required">Name</label>
-            <input
-              id="edit-name"
-              type="text"
-              formControlName="name"
-              class="form-control"
-              [class.error]="isFieldInvalid(editForm, 'name')"
-              placeholder="Enter customer name"
-              aria-describedby="edit-name-error"
-            />
-            <div *ngIf="isFieldInvalid(editForm, 'name')" class="error-message" id="edit-name-error">
-              {{ getFieldErrorMessage(editForm, 'name') }}
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="edit-email" class="required">Email</label>
-            <input
-              id="edit-email"
-              type="email"
-              formControlName="email"
-              class="form-control"
-              [class.error]="isFieldInvalid(editForm, 'email')"
-              placeholder="customer@example.com"
-              aria-describedby="edit-email-error"
-            />
-            <div *ngIf="isFieldInvalid(editForm, 'email')" class="error-message" id="edit-email-error">
-              {{ getFieldErrorMessage(editForm, 'email') }}
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="edit-company">Company</label>
-          <input
-            id="edit-company"
-            type="text"
-            formControlName="company"
-            class="form-control"
-            placeholder="Company name (optional)"
-          />
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            [disabled]="editForm.invalid || loading"
-            [class.btn-loading]="loading"
-          >
-            <span *ngIf="!loading">Update Customer</span>
-            <span *ngIf="loading">Updating...</span>
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Customer List -->
-    <div class="list-section">
-      <div class="list-header">
-        <h2>Customer List</h2>
-        <div class="list-stats">
-          <span class="stat">{{ customers.length }} customer{% if customers.length != 1 %}s{% endif %}</span>
-        </div>
-      </div>
-
-      <div *ngIf="customers.length === 0 && !loading" class="empty-state">
-        <div class="empty-icon">👥</div>
-        <h3>No customers yet</h3>
-        <p>Add your first customer using the form above.</p>
-      </div>
-
-      <div class="customer-grid" *ngIf="customers.length > 0">
-        <div
-          *ngFor="let customer of customers"
-          class="customer-card"
-          [class.editing]="selectedCustomer?.id === customer.id"
-        >
-          <div class="customer-info">
-            <div class="customer-avatar">
-              <span class="avatar-text">{{ customer.name[0] | upper }}</span>
-            </div>
-            <div class="customer-details">
-              <h3 class="customer-name">{{ customer.name }}</h3>
-              <p class="customer-email">{{ customer.email }}</p>
-              <p *ngIf="customer.company" class="customer-company">{{ customer.company }}</p>
-            </div>
-          </div>
-
-          <div class="customer-actions">
-            <button
-              type="button"
-              class="btn btn-outline"
-              (click)="selectCustomer(customer)"
-              [disabled]="loading"
-              aria-label="Edit customer {{ customer.name }}"
-            >
-              ✏️ Edit
-            </button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              (click)="confirmDelete(customer)"
-              [disabled]="loading"
-              aria-label="Delete customer {{ customer.name }}"
-            >
-              🗑️ Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Delete Confirmation Modal -->
-  <div *ngIf="showDeleteConfirm" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="delete-modal-title">Confirm Delete</h2>
-        <button type="button" class="modal-close" (click)="cancelDelete()" aria-label="Close modal">×</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="delete-warning">
-          <div class="warning-icon">⚠️</div>
-          <p>Are you sure you want to delete <strong>{{ customerToDelete.name }}</strong>?</p>
-          <p class="warning-text">This action cannot be undone.</p>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
-        <button
-          type="button"
-          class="btn btn-danger"
-          (click)="deleteCustomer()"
-          [disabled]="loading"
-          [class.btn-loading]="loading"
-        >
-          <span *ngIf="!loading">Delete Customer</span>
-          <span *ngIf="loading">Deleting...</span>
-        </button>
-      </div>
+      <p>Loading customers...</p>
     </div>
   </div>
 </div>
