@@ -1,4 +1,4 @@
-# AI Code Generation Platform
+# AI Code Generation Platform 
 
 A production-ready platform that generates complete, downloadable full-stack web applications (Spring Boot + Angular) from natural language prompts. It uses an AI-enriched generation pipeline with RAG-based context retrieval, web discovery, intelligent caching, and async background processing to produce ready-to-run project bundles.
 
