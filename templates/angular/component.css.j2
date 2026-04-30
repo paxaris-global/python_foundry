@@ -61,36 +61,50 @@
 .hero-card,
 .form-card,
 .table-card {
-  /* Angular Material Theme Variables */
-  :root {
-    --primary-color: #1976d2;
-    --accent-color: #ff4081;
-    --warn-color: #f44336;
-    --background-color: #fafafa;
-    --surface-color: #ffffff;
-    --text-primary: rgba(0, 0, 0, 0.87);
-    --text-secondary: rgba(0, 0, 0, 0.54);
-  }
+  border-radius: 16px;
+  overflow: hidden;
+}
 
-  /* Global Styles */
-  .customer-management {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: 'Roboto', 'Helvetica Neue', sans-serif;
-  }
+.hero-card mat-card-header {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: #fff;
+=======
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Welcome Card */
+.welcome-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+}
+
+.welcome-card mat-card-header {
   background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
   color: white;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
+>>>>>>> 3457fa72 (Update all content in python_foundry)
+  padding: 24px;
+  margin: -16px -16px 16px -16px;
+}
 
-  .app-title {
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    font-size: 1.25rem;
-  }
+<<<<<<< HEAD
+.form-card mat-card-header {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: #fff;
+=======
+.welcome-card mat-card-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.welcome-card mat-card-subtitle {
+  opacity: 0.9;
+  font-size: 1rem;
 }
 
 .welcome-card mat-card-content {

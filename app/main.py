@@ -129,6 +129,3 @@ _simplify_operation_ids(app)
 app.include_router(debug_router, prefix=API_PREFIX)
 >>>>>>> 3457fa72 (Update all content in python_foundry)
 app.mount("/metrics", make_asgi_app())
-app.include_router(debug_router, prefix=API_PREFIX)
-
-_simplify_operation_ids(app)

@@ -833,6 +833,7 @@ pytest -q
 ## Additional Documentation
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 - `docs/FULL_PROCESS_GUIDE.md` - Detailed runtime flow documentation
 - `docs/QUICK_REFERENCE.md` - Quick reference card
 - `docs/RAG_CODE_GENERATION_GUIDE.md` - RAG system deep dive
@@ -841,3 +842,6 @@ pytest -q
 =======
 echo "# python_foundry_dupli" >> README.md
 >>>>>>> c2fee84e (Initial commit to new repo)
+=======
+echo "# python_foundry" >> README.md
+>>>>>>> 54c87fc2 (upload latest code with template)
