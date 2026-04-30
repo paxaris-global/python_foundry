@@ -7,7 +7,13 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.constants import DEFAULT_DOMAIN, MANDATORY_OUTPUT_FILES, SUPPORTED_BACKENDS, SUPPORTED_FRONTENDS
+from app.core.constants import (
+    CODEGEN_TEMPLATE_VERSION,
+    DEFAULT_DOMAIN,
+    MANDATORY_OUTPUT_FILES,
+    SUPPORTED_BACKENDS,
+    SUPPORTED_FRONTENDS,
+)
 from app.core.exceptions import GenerationException, ValidationException
 from app.core.logging import get_logger
 from app.core.security import sanitize_project_name
@@ -792,6 +798,7 @@ class GenerationOrchestrator:
             features=features,
             domain=DEFAULT_DOMAIN,
             blueprint="scaffold",
+            template_version=CODEGEN_TEMPLATE_VERSION,
         )
 
     def exact_cache_lookup(self, fingerprint: str):

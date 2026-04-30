@@ -3,6 +3,10 @@ API_PREFIX = "/api/v1"
 SUPPORTED_BACKENDS = {"springboot"}
 SUPPORTED_FRONTENDS = {"angular"}
 
+# Bump this when template boilerplate changes.
+# It is included in the generation fingerprint to avoid serving stale cached UI.
+CODEGEN_TEMPLATE_VERSION = "2026-04-30-storefront-v1"
+
 ALLOWED_GENERATED_EXTENSIONS = {
     ".java",
     ".xml",

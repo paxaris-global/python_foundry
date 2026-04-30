@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urlunparse
 from fastapi import APIRouter, status
 
 from app.api.deps import DBSession
+from app.core.constants import CODEGEN_TEMPLATE_VERSION
 from app.core.exceptions import ServiceUnavailableException
 from app.core.security import sanitize_project_name
 from app.models.generation_cache import GenerationCache
@@ -109,6 +110,7 @@ def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateRe
         features=safe_features,
         domain="general",
         blueprint="scaffold",
+        template_version=CODEGEN_TEMPLATE_VERSION,
     )
     trace_id = new_trace_id()
 
