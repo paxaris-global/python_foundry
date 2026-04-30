@@ -47,22 +47,64 @@ class OpenAIProvider(BaseLLMProvider):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        response = self.client.chat.completions.create(
-            model=self.settings.openai_model,
-            messages=messages,
-            temperature=temperature,
-            timeout=60,
-            extra_headers={"x-trace-id": trace_id} if trace_id else None,
-        )
-        usage = response.usage
-        if usage:
-            self.last_usage = {
-                "prompt_tokens": usage.prompt_tokens,
-                "completion_tokens": usage.completion_tokens,
-                "total_tokens": usage.total_tokens,
-            }
-            logger.info("OpenAI usage=%s trace_id=%s", self.last_usage, trace_id)
-        return response.choices[0].message.content or ""
+        # Log the full prompt payload being sent to the LLM when enabled
+        try:
+            if getattr(self.settings, "log_llm_prompts", False):
+                combined = "\n".join([m.get("content", "") for m in messages])
+                clip = combined[: min(len(combined), self.settings.llm_prompt_log_max_chars)]
+                logger.info("LLM_SEND_PROMPT trace_id=%s prompt=\"%s\"", trace_id, clip.replace("\n", "\\n"))
+        except Exception:
+            logger.debug("Failed to log LLM send prompt", exc_info=True)
+
+        timeout = getattr(self.settings, "openai_timeout_seconds", 60)
+
+        raw_response = None
+        for attempt in range(2):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.settings.openai_model,
+                    messages=messages,
+                    temperature=temperature,
+                    timeout=timeout,
+                    extra_headers={"x-trace-id": trace_id} if trace_id else None,
+                )
+            except Exception:
+                # let tenacity handle retries for transient exceptions
+                raise
+
+            raw_response = response
+            # attempt to extract content
+            try:
+                content = response.choices[0].message.content or ""
+            except Exception:
+                content = ""
+
+            # log a truncated raw response for debugging
+            try:
+                logger.debug("LLM_RAW_RESPONSE trace_id=%s resp=%s", trace_id, str(response)[:2000])
+            except Exception:
+                logger.debug("LLM_RAW_RESPONSE trace_id=%s (could not stringify response)", trace_id)
+
+            if content and content.strip():
+                usage = getattr(response, "usage", None)
+                if usage:
+                    try:
+                        self.last_usage = {
+                            "prompt_tokens": usage.prompt_tokens,
+                            "completion_tokens": usage.completion_tokens,
+                            "total_tokens": usage.total_tokens,
+                        }
+                        logger.info("OpenAI usage=%s trace_id=%s", self.last_usage, trace_id)
+                    except Exception:
+                        pass
+                return content
+
+            # empty response — log and retry once
+            logger.warning("Empty LLM response (attempt=%s) trace_id=%s, retrying", attempt + 1, trace_id)
+
+        # nothing returned after retries
+        logger.warning("LLM returned empty response after retries trace_id=%s", trace_id)
+        return ""
 
     def generate_text(self, prompt: str, system_prompt: Optional[str] = None, trace_id: Optional[str] = None) -> str:
         return self._chat(prompt=prompt, system_prompt=system_prompt, trace_id=trace_id)

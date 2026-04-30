@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     max_generated_file_count: int = Field(default=600, alias="MAX_GENERATED_FILE_COUNT")
     max_zip_size_mb: int = Field(default=50, alias="MAX_ZIP_SIZE_MB")
     rag_min_similarity: float = Field(default=0.0, alias="RAG_MIN_SIMILARITY")
+    
+    # OpenAI / LLM settings
+    openai_timeout_seconds: int = Field(default=60, alias="OPENAI_TIMEOUT_SECONDS")
 
     downloads_dir_path: Optional[str] = Field(default=None, alias="DOWNLOADS_DIR")
 

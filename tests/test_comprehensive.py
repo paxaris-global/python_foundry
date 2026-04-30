@@ -497,6 +497,7 @@ class TestPromptParser:
         result = PromptParser().parse_prompt("Build a simple hello world app")
         assert result["entities"] == []
 
+<<<<<<< HEAD
     def test_extracts_ui_preferences(self):
         from app.services.generation.prompt_parser import PromptParser
 
@@ -507,6 +508,18 @@ class TestPromptParser:
         assert result["layout_style"] == "dashboard"
         assert result["brand_tone"] == "enterprise"
         assert "modern" in result["visual_keywords"]
+=======
+    def test_extracts_prompt_requirements(self):
+        from app.services.generation.prompt_parser import PromptParser
+
+        result = PromptParser().parse_prompt(
+            "Build a modern ecommerce app with login, checkout, a hero section, pricing section, and charts"
+        )
+        assert "modern" in result["design_hints"]
+        assert "login" in result["pages"]
+        assert "hero" in result["sections"]
+        assert "chart" in result["required_components"]
+>>>>>>> 3457fa72 (Update all content in python_foundry)
 
 
 # ===================================================================
@@ -821,6 +834,7 @@ class TestProjectSpecBuilder:
         assert "dashboard" in spec["features"]
         assert spec["backend"]["stack"] == "springboot"
         assert "Application" in spec["backend"]["application_class"]
+<<<<<<< HEAD
         assert spec["frontend"]["ui_profile"] == "professional"
         assert spec["frontend"]["layout_style"] == "workspace"
         assert spec["frontend"]["theme_tokens"]["primary"]
@@ -845,6 +859,8 @@ class TestProjectSpecBuilder:
         assert spec["frontend"]["layout_style"] == "dashboard"
         assert spec["frontend"]["brand_tone"] == "enterprise"
         assert "modern" in spec["frontend"]["visual_keywords"]
+=======
+>>>>>>> 3457fa72 (Update all content in python_foundry)
 
     def test_entities_fallback(self):
         from app.services.generation.project_spec_builder import ProjectSpecBuilder
@@ -905,7 +921,10 @@ class TestPromptEnricher:
             fallback_context={"strategy": "scaffold"},
         )
         assert "Build CRM" in result
+<<<<<<< HEAD
         assert "UIRequirements:" in result
+=======
+>>>>>>> 3457fa72 (Update all content in python_foundry)
         assert "ProjectSpec:" in result
         assert "APIContract:" in result
         assert "RAGContext:" in result
@@ -976,6 +995,10 @@ class TestValidatorAndRepair:
             non_empty_files={"ok": True},
             manifest_consistency={"ok": True},
             path_safety={"ok": True},
+<<<<<<< HEAD
+=======
+            prompt_requirements={"ok": True},
+>>>>>>> 3457fa72 (Update all content in python_foundry)
             syntax={"ok": True},
         )
         assert report["valid"] is True
@@ -989,6 +1012,10 @@ class TestValidatorAndRepair:
             non_empty_files={"ok": True},
             manifest_consistency={"ok": True},
             path_safety={"ok": True},
+<<<<<<< HEAD
+=======
+            prompt_requirements={"ok": True},
+>>>>>>> 3457fa72 (Update all content in python_foundry)
             syntax={"ok": True},
         )
         assert report["valid"] is False

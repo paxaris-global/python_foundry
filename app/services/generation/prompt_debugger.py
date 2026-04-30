@@ -65,6 +65,15 @@ class PromptDebugger:
                 clip.replace("\n", "\\n"),
             )
 
+        # Also write the final enriched prompt to a well-known logs file for quick inspection
+        try:
+            if self.settings.log_llm_prompts:
+                logs_dir = ensure_directory(Path(self.settings.base_dir) / "logs")
+                log_path = logs_dir / "last_final_enriched_prompt.txt"
+                write_text_file(log_path, final_enriched_prompt)
+        except Exception:
+            logger.debug("Failed to write final enriched prompt to logs file", exc_info=True)
+
         return artifact
 
     def write_project_prompt_files(self, project_root: Path, artifact: PromptArtifact, project_id: UUID) -> PromptArtifact:

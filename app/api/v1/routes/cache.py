@@ -39,6 +39,7 @@ def get_cache_entry(fingerprint: FingerprintPath, db: DBSession) -> CacheEntryRe
     if not row:
         raise NotFoundException("Cache entry not found")
 
+<<<<<<< HEAD
     return CacheEntryResponse(
         fingerprint=row.fingerprint,
         project_id=str(row.project_id) if row.project_id else None,
@@ -48,3 +49,26 @@ def get_cache_entry(fingerprint: FingerprintPath, db: DBSession) -> CacheEntryRe
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
+=======
+    return {
+        "fingerprint": row.fingerprint,
+        "project_id": str(row.project_id) if row.project_id else None,
+        "hit_count": row.hit_count,
+        "request_payload": row.request_payload,
+        "cache_metadata": row.cache_metadata,
+        "created_at": row.created_at,
+        "updated_at": row.updated_at,
+    }
+
+
+@router.delete("/{fingerprint}")
+def delete_cache_entry(fingerprint: str, db: DBSession) -> dict:
+    row = db.query(GenerationCache).filter(GenerationCache.fingerprint == fingerprint).first()
+    if not row:
+        raise NotFoundException("Cache entry not found")
+
+    db.delete(row)
+    db.commit()
+
+    return {"deleted": True, "fingerprint": fingerprint}
+>>>>>>> 3457fa72 (Update all content in python_foundry)

@@ -11,6 +11,7 @@ from app.api.v1.routes.jobs import router as jobs_router
 from app.api.v1.routes.projects import router as projects_router
 from app.api.v1.routes.rag import router as rag_router
 from app.api.v1.routes.web_discovery import router as web_discovery_router
+from app.api.v1.routes.debug import router as debug_router
 from app.core.constants import API_PREFIX
 from app.core.exceptions import register_exception_handlers
 from app.schemas.common import ErrorResponse
@@ -120,7 +121,14 @@ app.include_router(projects_router, prefix=API_PREFIX)
 app.include_router(rag_router, prefix=API_PREFIX)
 app.include_router(cache_router, prefix=API_PREFIX)
 app.include_router(web_discovery_router, prefix=API_PREFIX)
+<<<<<<< HEAD
 
 _simplify_operation_ids(app)
 
+=======
+app.include_router(debug_router, prefix=API_PREFIX)
+>>>>>>> 3457fa72 (Update all content in python_foundry)
 app.mount("/metrics", make_asgi_app())
+app.include_router(debug_router, prefix=API_PREFIX)
+
+_simplify_operation_ids(app)

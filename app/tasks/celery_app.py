@@ -1,3 +1,5 @@
+import multiprocessing
+multiprocessing.set_start_method("spawn", force=True)
 from celery import Celery
 
 from app.core.config import get_settings

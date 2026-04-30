@@ -199,6 +199,7 @@ def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateRe
                     cache_hit=True,
                     cached_project_id=str(cached.project_id),
                     mode_selected="reuse",
+                    debug_prompt_url=f"/api/v1/debug/last-prompt?job_id={cached_job.id}",
                 )
 
     job = Job(
@@ -243,4 +244,5 @@ def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateRe
         fingerprint=fingerprint,
         cache_hit=False,
         mode_selected=payload.mode_preference if payload.mode_preference != "auto" else None,
+        debug_prompt_url=f"/api/v1/debug/last-prompt?job_id={job.id}",
     )
