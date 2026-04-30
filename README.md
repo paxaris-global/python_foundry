@@ -832,8 +832,12 @@ pytest -q
 
 ## Additional Documentation
 
+<<<<<<< HEAD
 - `docs/FULL_PROCESS_GUIDE.md` - Detailed runtime flow documentation
 - `docs/QUICK_REFERENCE.md` - Quick reference card
 - `docs/RAG_CODE_GENERATION_GUIDE.md` - RAG system deep dive
 - `docs/TEMPLATE_CATALOG.md` - Available code generation templates
 - `docs/TEMPLATE_REFERENCE_GUIDE.md` - Template authoring guide
+=======
+echo "# python_foundry_dupli" >> README.md
+>>>>>>> c2fee84e (Initial commit to new repo)
