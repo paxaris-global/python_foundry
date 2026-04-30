@@ -497,6 +497,17 @@ class TestPromptParser:
         result = PromptParser().parse_prompt("Build a simple hello world app")
         assert result["entities"] == []
 
+    def test_extracts_ui_preferences(self):
+        from app.services.generation.prompt_parser import PromptParser
+
+        result = PromptParser().parse_prompt(
+            "Build a premium enterprise dashboard with modern visuals"
+        )
+        assert result["ui_profile"] == "luxury"
+        assert result["layout_style"] == "dashboard"
+        assert result["brand_tone"] == "enterprise"
+        assert "modern" in result["visual_keywords"]
+
 
 # ===================================================================
 # 9. DOMAIN CLASSIFIER
@@ -810,6 +821,30 @@ class TestProjectSpecBuilder:
         assert "dashboard" in spec["features"]
         assert spec["backend"]["stack"] == "springboot"
         assert "Application" in spec["backend"]["application_class"]
+        assert spec["frontend"]["ui_profile"] == "professional"
+        assert spec["frontend"]["layout_style"] == "workspace"
+        assert spec["frontend"]["theme_tokens"]["primary"]
+
+    def test_builds_ui_metadata_from_prompt(self):
+        from app.services.generation.project_spec_builder import ProjectSpecBuilder
+
+        spec = ProjectSpecBuilder().build_project_spec(
+            parsed_prompt={
+                "summary": "Luxury admin console",
+                "ui_profile": "luxury",
+                "layout_style": "dashboard",
+                "brand_tone": "enterprise",
+                "visual_keywords": ["modern", "premium"],
+            },
+            project_name="ops-studio",
+            backend="springboot",
+            frontend="angular",
+            features=[],
+        )
+        assert spec["frontend"]["ui_profile"] == "luxury"
+        assert spec["frontend"]["layout_style"] == "dashboard"
+        assert spec["frontend"]["brand_tone"] == "enterprise"
+        assert "modern" in spec["frontend"]["visual_keywords"]
 
     def test_entities_fallback(self):
         from app.services.generation.project_spec_builder import ProjectSpecBuilder
@@ -870,6 +905,7 @@ class TestPromptEnricher:
             fallback_context={"strategy": "scaffold"},
         )
         assert "Build CRM" in result
+        assert "UIRequirements:" in result
         assert "ProjectSpec:" in result
         assert "APIContract:" in result
         assert "RAGContext:" in result

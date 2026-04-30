@@ -178,3 +178,31 @@ def test_frontend_nginx_conf_is_required() -> None:
     assert ".conf" in ALLOWED_GENERATED_EXTENSIONS
     assert "frontend/nginx.conf" in MANDATORY_OUTPUT_FILES
 
+
+def test_angular_generator_uses_professional_shell_with_ui_metadata() -> None:
+    from app.services.generators.angular_generator import AngularGenerator
+
+    files = AngularGenerator().generate(
+        {
+            "project_name": "my-crm",
+            "frontend": {
+                "ui_profile": "professional",
+                "layout_style": "dashboard",
+                "theme_tokens": {
+                    "primary": "#2563eb",
+                    "accent": "#14b8a6",
+                    "surface": "#ffffff",
+                    "text": "#0f172a",
+                    "muted": "#475569",
+                },
+            },
+        },
+        {},
+        [],
+    )
+
+    assert "Launch Workflow" in files["frontend/src/app/app.component.html"]
+    assert "app-shell dashboard" in files["frontend/src/app/app.component.html"]
+    assert "readonly navigation" in files["frontend/src/app/app.component.ts"]
+
+
