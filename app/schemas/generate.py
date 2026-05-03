@@ -49,7 +49,6 @@ class GenerateRequest(BaseModel):
 
 
 class GenerateResponse(BaseModel):
-<<<<<<< HEAD
     """Response returned after a generation job is accepted.
 
     Two scenarios:
@@ -98,12 +97,4 @@ class GenerateResponse(BaseModel):
         default=None,
         description="Execution mode chosen. Null when mode_preference was 'auto' and resolution is deferred to the worker.",
     )
-=======
-    job_id: str
-    status: str
-    fingerprint: str
-    cache_hit: bool = False
-    cached_project_id: str | None = None
-    mode_selected: str | None = None
-    debug_prompt_url: str | None = None
->>>>>>> 3457fa72 (Update all content in python_foundry)
+    debug_prompt_url: Optional[str] = Field(default=None, description="URL to debug the prompt used for generation.")

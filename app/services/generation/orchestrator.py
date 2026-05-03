@@ -562,18 +562,99 @@ class GenerationOrchestrator:
             # LLM-powered code improvement step for frontend files
             from app.services.llm.openai_provider import OpenAIProvider
             llm = OpenAIProvider()
-            for file_path, file_content in frontend_files.items():
-                if file_path.endswith((".html", ".css", ".ts")):
-                    llm_prompt = (
+
+            features_str = ", ".join(project_spec.get("features", []))
+            domain = project_spec.get("domain", "web application")
+
+            def _build_llm_prompt(file_path: str, file_content: str) -> str:
+                if file_path.endswith(".css"):
+                    return (
                         f"User prompt: {prompt}\n"
+                        f"Domain: {domain}\n"
+                        f"Features: {features_str}\n"
                         f"File: {file_path}\n"
-                        "Rewrite or improve this file for a modern, professional UI/UX, "
-                        "adding or updating features as described in the prompt. "
-                        "Return only the updated file content."
+                        f"Current CSS:\n{file_content}\n\n"
+                        "You are an expert UI/UX designer and CSS engineer. "
+                        "Completely rewrite this CSS file to produce a STUNNING, MODERN, PRODUCTION-READY design. "
+                        "Requirements:\n"
+                        "- Use CSS custom properties (variables) for theming\n"
+                        "- Apply a beautiful color palette matching the domain/brand\n"
+                        "- Add smooth transitions, hover effects, box shadows, and gradients\n"
+                        "- Make it fully responsive (mobile, tablet, desktop) with media queries\n"
+                        "- Style all interactive elements (buttons, inputs, cards, navbars, modals)\n"
+                        "- Use flexbox and grid for clean layouts\n"
+                        "- Add professional typography with proper font sizes and weights\n"
+                        "- Include loading states, error states, and empty states styling\n"
+                        "- Ensure accessibility with focus states and contrast ratios\n"
+                        "Return ONLY the CSS code, no markdown fences, no explanations."
                     )
+                elif file_path.endswith(".html"):
+                    return (
+                        f"User prompt: {prompt}\n"
+                        f"Domain: {domain}\n"
+                        f"Features: {features_str}\n"
+                        f"File: {file_path}\n"
+                        f"Current HTML/Angular template:\n{file_content}\n\n"
+                        "You are an expert Angular developer and UI designer. "
+                        "Rewrite this Angular HTML template with a MODERN, PROFESSIONAL UI. "
+                        "Requirements:\n"
+                        "- Use Angular Material components wherever appropriate\n"
+                        "- Add semantic HTML5 elements\n"
+                        "- Include all features from the user prompt\n"
+                        "- Add proper loading spinners, error messages, empty state messages\n"
+                        "- Use Angular directives (*ngIf, *ngFor) correctly\n"
+                        "- Ensure all buttons, forms, and interactive elements are styled\n"
+                        "- Add accessibility attributes (aria-labels, roles)\n"
+                        "Return ONLY the Angular HTML code, no markdown fences, no explanations."
+                    )
+                else:  # .ts
+                    return (
+                        f"User prompt: {prompt}\n"
+                        f"Domain: {domain}\n"
+                        f"Features: {features_str}\n"
+                        f"File: {file_path}\n"
+                        f"Current TypeScript:\n{file_content}\n\n"
+                        "You are an expert Angular developer. "
+                        "Rewrite or improve this TypeScript file to include all features from the prompt. "
+                        "Follow Angular best practices, use RxJS, typed interfaces, and proper error handling. "
+                        "Return ONLY the TypeScript code, no markdown fences, no explanations."
+                    )
+
+            # Pass 1: LLM improvement per file
+            for file_path, file_content in list(frontend_files.items()):
+                if file_path.endswith((".html", ".css", ".ts")):
+                    llm_prompt = _build_llm_prompt(file_path, file_content)
                     improved_content = llm.generate_code_block(prompt=llm_prompt, language="text")
                     if improved_content and improved_content.strip():
                         frontend_files[file_path] = improved_content
+
+            # Pass 2: LLM review/rework — verify all files are consistent and production-ready
+            all_frontend_summary = "\n\n".join(
+                f"=== {fp} ===\n{fc[:800]}" for fp, fc in frontend_files.items()
+                if fp.endswith((".html", ".css", ".ts"))
+            )
+            review_prompt = (
+                f"User prompt: {prompt}\n"
+                f"Domain: {domain}\n"
+                f"Features: {features_str}\n\n"
+                "You are a senior software architect doing a final review of the following Angular project files. "
+                "Check each file for:\n"
+                "1. CSS files: Are they visually impressive, responsive, and production-quality? If not, rewrite them.\n"
+                "2. HTML files: Do they match the user prompt features and use proper Angular/Material? If not, fix them.\n"
+                "3. TypeScript files: Are they complete, typed, and error-free? If not, fix them.\n\n"
+                "Return a JSON object where keys are file paths and values are the corrected file contents. "
+                "Only include files that needed changes. Return valid JSON only, no markdown.\n\n"
+                f"Files to review:\n{all_frontend_summary}"
+            )
+            try:
+                review_result = llm.generate_structured_json(prompt=review_prompt)
+                if isinstance(review_result, dict):
+                    for fp, fc in review_result.items():
+                        if fp in frontend_files and fc and str(fc).strip():
+                            frontend_files[fp] = str(fc)
+                            logger.info("LLM review pass improved file: %s", fp)
+            except Exception:
+                logger.warning("LLM review pass failed, continuing with pass-1 results", exc_info=True)
             docker_files = self.pipeline.execute_stage(
                 "generate_docker_files",
                 self.generate_docker_files,
