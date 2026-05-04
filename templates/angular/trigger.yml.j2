@@ -1,4 +1,4 @@
-name: CI + Docker Hub + Trigger Central CD
+{% raw %}name: CI + Docker Hub + Trigger Central CD
 
 on:
   push:
@@ -96,3 +96,4 @@ jobs:
       - name: Central workflow trigger skipped
         if: ${{ steps.token_check.outputs.should_trigger != 'true' }}
         run: echo "Central CD trigger skipped because GH_ACCESS_TOKEN is not configured."
+{% endraw %}
