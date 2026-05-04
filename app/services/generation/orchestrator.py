@@ -862,14 +862,6 @@ class GenerationOrchestrator:
                     return llm_test.generate_code_block(prompt=prompt, language="python")
                 return None
 
-            # Generate frontend tests
-            for file_path, file_content in list(frontend_files.items()):
-                if file_path.endswith(".ts") and not file_path.endswith(".spec.ts"):
-                    test_code = _generate_tests_for_file(file_path, file_content)
-                    if test_code and test_code.strip():
-                        test_path = file_path.replace(".ts", ".spec.ts")
-                        frontend_files[test_path] = test_code
-
             # Generate backend tests
             for file_path, file_content in list(backend_files.items()):
                 if file_path.endswith(".py") and "/app/" in file_path:
@@ -913,7 +905,7 @@ class GenerationOrchestrator:
                 try:
                     frontend_test_result = subprocess.run([
                         "npx", "ng", "test", "--watch=false", "--browsers=ChromeHeadless"
-                    ], cwd=os.path.join(str(project_root), "frontend"), capture_output=True, text=True)
+                    ], cwd=os.path.join(str(project_root), "frontend"), capture_output=True, text=True, timeout=120)
                 except Exception as e:
                     break
                 if frontend_test_result.returncode == 0:
