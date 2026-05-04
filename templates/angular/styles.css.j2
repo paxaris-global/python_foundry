@@ -200,6 +200,7 @@ body {
   }
 }
 =======
+{% set design_hints = design_hints if design_hints is defined else [] %}
 /* ═══════════════════════════════════════════════════════════════════
    Global styles — theme driven by design hints, not domain
    Design hints: {{ design_hints | join(', ') if design_hints else 'none' }}

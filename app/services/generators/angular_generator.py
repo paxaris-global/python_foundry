@@ -15,12 +15,30 @@ class AngularGenerator(BaseGenerator):
         theme_tokens = frontend_spec.get("theme_tokens", {})
         app_title = self._title_case(app_name)
 
+        # Build design_hints from domain, features and ui_profile so templates never get UndefinedError
+        domain = project_spec.get("domain", "")
+        features = project_spec.get("features", [])
+        design_hints: list[str] = []
+        if ui_profile in ("luxury", "premium"):
+            design_hints.append("luxury")
+        if ui_profile in ("minimal", "clean"):
+            design_hints.append("minimal")
+        if ui_profile in ("corporate", "enterprise"):
+            design_hints.append("corporate")
+        if domain in ("ecommerce", "retail"):
+            design_hints.append("colorful")
+        if "dark" in features or "dark_mode" in features:
+            design_hints.append("dark")
+        if not design_hints:
+            design_hints.append("professional")
+
         ctx = {
             "project_name": app_name,
             "api_base_url": "http://localhost:8080",
             "ui_profile": ui_profile,
             "layout_style": layout_style,
             "theme_tokens": theme_tokens,
+            "design_hints": design_hints,
         }
 
         files: dict[str, str] = {
