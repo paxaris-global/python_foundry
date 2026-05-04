@@ -39,6 +39,12 @@ class AngularGenerator(BaseGenerator):
             "layout_style": layout_style,
             "theme_tokens": theme_tokens,
             "design_hints": design_hints,
+            "domain": domain,
+            "features": features,
+            "app_title": app_title,
+            "year": "2026",
+            "error": "",
+            "production": False,
         }
 
         files: dict[str, str] = {
