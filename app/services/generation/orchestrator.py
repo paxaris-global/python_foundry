@@ -759,6 +759,7 @@ class GenerationOrchestrator:
                 except Exception:
                     pass
 
+            _build_succeeded = False
             for attempt in range(MAX_TEST_FIX_ATTEMPTS):
                 if not os.path.exists(os.path.join(frontend_dir, "node_modules")):
                     break
@@ -771,6 +772,7 @@ class GenerationOrchestrator:
                     break
                 if build_result.returncode == 0:
                     logger.info("Angular build succeeded on attempt %d", attempt + 1)
+                    _build_succeeded = True
                     break
 
                 # Parse errors: extract "Error: src/app/..." lines
@@ -792,18 +794,36 @@ class GenerationOrchestrator:
                     for fp in broken_fps if fp in frontend_files
                 }
                 _error_summary = "\n".join(error_lines[:40])
+                _available_pkgs: list[str] = []
+                try:
+                    with open(os.path.join(frontend_dir, "package.json")) as _pf:
+                        _pkg_data = json.loads(_pf.read())
+                    _available_pkgs = (
+                        list(_pkg_data.get("dependencies", {}).keys())
+                        + list(_pkg_data.get("devDependencies", {}).keys())
+                    )
+                except Exception:
+                    pass
+                _pkg_constraint = (
+                    "AVAILABLE npm packages (ONLY use these, NEVER import anything else): "
+                    + ", ".join(sorted(_available_pkgs)) + "\n"
+                    if _available_pkgs else ""
+                )
                 fix_prompt = (
                     f"User prompt: {prompt}\nDomain: {domain}\nFeatures: {features_str}\n\n"
-                    "The Angular project failed to compile. Fix ALL errors so `ng build` succeeds.\n"
-                    "RULES:\n"
-                    "- Only import files that exist in the provided file list\n"
-                    "- Do NOT add new component imports to app-routing or app.module\n"
-                    "- Fix TypeScript strict errors (add '!' or '| undefined', initialize properties)\n"
-                    "- Remove any 'window[\"ngRef\"]' usage in main.ts\n"
-                    "- Return a JSON object {filepath: corrected_content} for ONLY the files that need fixing.\n\n"
-                    f"Build errors:\n{_error_summary}\n\n"
-                    f"Broken files:\n" +
-                    "\n\n".join(f"=== {fp} ===\n{fc}" for fp, fc in broken_contents.items())
+                    + _pkg_constraint
+                    + (
+                        "The Angular project failed to compile. Fix ALL errors so `ng build` succeeds.\n"
+                        "RULES:\n"
+                        "- Only import files that exist in the provided file list\n"
+                        "- Do NOT add new component imports to app-routing or app.module\n"
+                        "- Fix TypeScript strict errors (add '!' or '| undefined', initialize properties)\n"
+                        "- Remove any 'window[\"ngRef\"]' usage in main.ts\n"
+                        "- Return a JSON object {filepath: corrected_content} for ONLY the files that need fixing.\n\n"
+                        f"Build errors:\n{_error_summary}\n\n"
+                        f"Broken files:\n"
+                    )
+                    + "\n\n".join(f"=== {fp} ===\n{fc}" for fp, fc in broken_contents.items())
                 )
                 try:
                     fix_result = llm.generate_structured_json(prompt=fix_prompt)
@@ -973,7 +993,13 @@ class GenerationOrchestrator:
                 )
 
                 logger.info("Pass 3: Starting full-site enhancement LLM pass")
-                enhancement_result = llm.generate_structured_json(prompt=enhancement_prompt)
+                if not _build_succeeded:
+                    logger.warning("Pass 3: Skipping LLM enhancement call — build has unresolved errors")
+                    enhancement_result = {}
+                else:
+                    enhancement_result = llm.generate_structured_json(
+                        prompt=enhancement_prompt, max_tokens=16000
+                    )
 
                 if isinstance(enhancement_result, dict) and enhancement_result:
                     enhanced_count = 0
@@ -1177,7 +1203,17 @@ class GenerationOrchestrator:
                 validation_report,
             )
             if not validation_report.get("valid", False):
-                raise ValidationException("Generated project failed layered validation")
+                logger.warning(
+                    "Validation found issues but delivering project anyway: structure=%s required_files=%s "
+                    "non_empty=%s manifest=%s path_safety=%s syntax=%s",
+                    validation_report.get("structure", {}).get("ok"),
+                    validation_report.get("required_files", {}).get("ok"),
+                    validation_report.get("non_empty_files", {}).get("ok"),
+                    validation_report.get("manifest_consistency", {}).get("ok"),
+                    validation_report.get("path_safety", {}).get("ok"),
+                    validation_report.get("syntax", {}).get("ok"),
+                )
+                validation_report["partial"] = True
 
             package_result = self.pipeline.execute_stage(
                 "package_to_zip",

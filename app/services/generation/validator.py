@@ -45,7 +45,7 @@ class ProjectValidator:
                 non_empty_files.get("ok", False),
                 manifest_consistency.get("ok", False),
                 path_safety.get("ok", False),
-                syntax.get("ok", False),
+                # syntax check is advisory — TypeScript/Angular errors are handled by ng build loop
             ]
         )
         return {

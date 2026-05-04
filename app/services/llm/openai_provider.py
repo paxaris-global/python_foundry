@@ -26,6 +26,7 @@ class OpenAIProvider(BaseLLMProvider):
         system_prompt: Optional[str] = None,
         temperature: float = 0.2,
         trace_id: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> str:
         if self.settings.log_llm_prompts:
             safe_user_prompt = self._truncate_for_log(prompt)
@@ -66,6 +67,7 @@ class OpenAIProvider(BaseLLMProvider):
                     messages=messages,
                     temperature=temperature,
                     timeout=timeout,
+                    **({"max_tokens": max_tokens} if max_tokens else {}),
                     extra_headers={"x-trace-id": trace_id} if trace_id else None,
                 )
             except Exception:
@@ -114,12 +116,14 @@ class OpenAIProvider(BaseLLMProvider):
         prompt: str,
         system_prompt: Optional[str] = None,
         trace_id: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> dict[str, Any]:
         payload = self._chat(
-            prompt=f"Return strict JSON only.\\n{prompt}",
+            prompt=f"Return strict JSON only.\n{prompt}",
             system_prompt=system_prompt,
             temperature=0.1,
             trace_id=trace_id,
+            max_tokens=max_tokens,
         )
         try:
             return json.loads(payload)

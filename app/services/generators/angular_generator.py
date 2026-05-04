@@ -81,7 +81,7 @@ class AngularGenerator(BaseGenerator):
             ),
             "frontend/src/environments/environment.prod.ts": self.renderer.render(
               TemplateRegistry.ANGULAR_ENVIRONMENT.path,
-              {"production": True, "api_base_url": "/api"},
+              {"production": True, "api_base_url": "/api/v1"},
             ),
             "frontend/nginx.conf": self._nginx_conf(),
             "frontend/Dockerfile": self.renderer.render(TemplateRegistry.ANGULAR_DOCKERFILE.path, ctx),
@@ -436,6 +436,13 @@ export class CustomersModule {}
   server_name _;
   root /usr/share/nginx/html;
   index index.html;
+
+  location /api/ {
+    proxy_pass http://backend:8080/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
 
   location / {
     try_files $uri $uri/ /index.html;
