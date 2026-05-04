@@ -913,6 +913,146 @@ class GenerationOrchestrator:
 
             # --- End Automated Test Generation and LLM Test-Fix Loop ---
 
+            # ══════════════════════════════════════════════════════════════════════
+            # PASS 3 — Full-Site Enhancement: multi-page, realistic, production-ready
+            # ══════════════════════════════════════════════════════════════════════
+            # This pass turns the generated single-page skeleton into a FULL website
+            # with multiple pages, rich navigation, realistic data, and a polished UI
+            # that mirrors the reference website (website_like) if provided.
+            try:
+                # Build a map of existing files for context
+                _existing_summary = "\n".join(
+                    f"  {fp}" for fp in sorted(frontend_files.keys())
+                    if fp.endswith((".ts", ".html", ".css"))
+                )
+                _website_context = (
+                    f"Reference website to mirror: {website_like}" if website_like
+                    else "No reference website — create a professional, production-quality site."
+                )
+
+                enhancement_prompt = (
+                    f"User prompt: {prompt}\n"
+                    f"Domain: {domain}\n"
+                    f"Features: {features_str}\n"
+                    f"{_website_context}\n\n"
+                    "You are a senior full-stack Angular developer. "
+                    "The project currently has these files:\n"
+                    f"{_existing_summary}\n\n"
+                    "Your job is to COMPLETELY ENHANCE this project into a FULL, REALISTIC, PRODUCTION-READY website. "
+                    "Requirements:\n\n"
+                    "1. MULTIPLE PAGES: Generate separate routed Angular components for every major section "
+                    "   (e.g. Home, Products/Listing, Product Detail, Cart, Checkout, Auth/Login, Admin Dashboard, "
+                    "   Profile, Orders — whatever fits the domain). Each must be a standalone .ts + .html + .css.\n\n"
+                    "2. REAL NAVIGATION: Update app-routing.module.ts with all new routes. "
+                    "   Create a full navbar component (frontend/src/app/shared/navbar/navbar.component.ts/.html/.css) "
+                    "   with logo, links to all pages, search bar, user/cart icons, and mobile hamburger menu.\n\n"
+                    "3. REALISTIC DATA: Every page must display real-looking content — NOT 'Lorem ipsum'. "
+                    "   Use domain-appropriate text, product/item names, prices, descriptions. "
+                    "   For images use: https://picsum.photos/seed/{seed}/400/300 with unique seeds per item.\n\n"
+                    "4. HERO SECTION: The home page must have a stunning hero banner with headline, "
+                    "   subheading, CTA button, and a background image/gradient matching the domain brand.\n\n"
+                    "5. FEATURE SECTIONS: Category grids, featured items/cards, testimonials, stats, "
+                    "   call-to-action sections — whatever makes the domain look complete and credible.\n\n"
+                    "6. FOOTER: A full footer with logo, links, social icons, and copyright.\n\n"
+                    "7. SHARED SERVICES: Generate all necessary Angular services "
+                    "   (auth.service.ts, product.service.ts, cart.service.ts etc.) with proper "
+                    "   TypeScript interfaces and BehaviorSubject/Observable state management.\n\n"
+                    "8. MODELS: Generate TypeScript model interfaces in frontend/src/app/models/ "
+                    "   (product.model.ts, user.model.ts, order.model.ts etc.).\n\n"
+                    "9. APP MODULE: Update app.module.ts to declare ALL new components and import "
+                    "   all needed Angular Material modules, FormsModule, ReactiveFormsModule, HttpClientModule.\n\n"
+                    "10. CSS QUALITY: Every component CSS must be production-quality — "
+                    "    CSS variables, gradients, animations, hover effects, fully responsive.\n\n"
+                    "CRITICAL RULES:\n"
+                    "- Return a single JSON object: {\"filepath\": \"complete file content\"}\n"
+                    "- Include ALL files: every .ts, .html, and .css for every component\n"
+                    "- Every import path must be correct and resolvable\n"
+                    "- No TypeScript strict errors — initialize all properties\n"
+                    "- Return valid JSON only, no markdown fences or explanations\n"
+                    "- Generate at minimum 8-12 components, 2-3 services, 3-5 models"
+                )
+
+                logger.info("Pass 3: Starting full-site enhancement LLM pass")
+                enhancement_result = llm.generate_structured_json(prompt=enhancement_prompt)
+
+                if isinstance(enhancement_result, dict) and enhancement_result:
+                    enhanced_count = 0
+                    for fp, fc in enhancement_result.items():
+                        if not fp or not fc or not str(fc).strip():
+                            continue
+                        # Normalise path — strip leading slashes
+                        fp = fp.lstrip("/")
+                        if not fp.startswith("frontend/"):
+                            fp = "frontend/" + fp
+                        frontend_files[fp] = str(fc)
+                        # Write to disk immediately
+                        abs_path = os.path.join(str(project_root), fp)
+                        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                        with open(abs_path, "w") as _fh:
+                            _fh.write(str(fc))
+                        enhanced_count += 1
+                    logger.info("Pass 3: Enhancement applied %d files", enhanced_count)
+
+                    # Pass 3B — Post-enhancement build fix (up to 2 more attempts)
+                    for _attempt in range(2):
+                        if not os.path.exists(os.path.join(frontend_dir, "node_modules")):
+                            break
+                        try:
+                            _build = subprocess.run(
+                                ["npx", "ng", "build", "--configuration=development", "--no-progress"],
+                                cwd=frontend_dir, capture_output=True, text=True, timeout=300
+                            )
+                        except Exception:
+                            break
+                        if _build.returncode == 0:
+                            logger.info("Pass 3B: Build succeeded after enhancement (attempt %d)", _attempt + 1)
+                            break
+                        _err_out = _build.stderr + "\n" + _build.stdout
+                        _err_lines = [l for l in _err_out.splitlines()
+                                      if "Error:" in l or "error TS" in l or "error NG" in l]
+                        if not _err_lines:
+                            break
+                        _broken = {}
+                        for _el in _err_lines:
+                            _m = _re.search(r"src/[^\s:]+\.ts", _el)
+                            if _m:
+                                _fp = "frontend/" + _m.group(0)
+                                if _fp in frontend_files:
+                                    _broken[_fp] = frontend_files[_fp]
+                        _err_summary = "\n".join(_err_lines[:50])
+                        _fix_p = (
+                            f"User prompt: {prompt}\nDomain: {domain}\n\n"
+                            "Fix these Angular build errors. Return JSON {filepath: content} for broken files only.\n"
+                            "Rules: fix TypeScript strict errors, correct import paths, "
+                            "initialize all class properties, do not invent new files.\n\n"
+                            f"Errors:\n{_err_summary}\n\n"
+                            "Broken files:\n" +
+                            "\n\n".join(f"=== {_fp} ===\n{_fc[:1500]}" for _fp, _fc in _broken.items())
+                        )
+                        try:
+                            _fix_r = llm.generate_structured_json(prompt=_fix_p)
+                            if isinstance(_fix_r, dict):
+                                for _fp, _fc in _fix_r.items():
+                                    if _fc and str(_fc).strip():
+                                        _fp = _fp.lstrip("/")
+                                        if not _fp.startswith("frontend/"):
+                                            _fp = "frontend/" + _fp
+                                        frontend_files[_fp] = str(_fc)
+                                        _abs = os.path.join(str(project_root), _fp)
+                                        os.makedirs(os.path.dirname(_abs), exist_ok=True)
+                                        with open(_abs, "w") as _fh:
+                                            _fh.write(str(_fc))
+                                        logger.info("Pass 3B fix: %s", _fp)
+                        except Exception:
+                            logger.warning("Pass 3B build-fix failed on attempt %d", _attempt + 1, exc_info=True)
+                else:
+                    logger.warning("Pass 3: Enhancement returned no results, keeping existing files")
+            except Exception:
+                logger.warning("Pass 3 enhancement failed, continuing with existing files", exc_info=True)
+            # ══════════════════════════════════════════════════════════════════════
+            # END PASS 3
+            # ══════════════════════════════════════════════════════════════════════
+
             docker_files = self.pipeline.execute_stage(
                 "generate_docker_files",
                 self.generate_docker_files,
