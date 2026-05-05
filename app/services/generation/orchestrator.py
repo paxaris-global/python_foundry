@@ -751,6 +751,17 @@ class GenerationOrchestrator:
             # Run ng build to check for real TypeScript/Angular compilation errors.
             # If errors found, send them + the broken files to LLM for correction.
             frontend_dir = os.path.join(str(project_root), "frontend")
+            def _normalize_frontend_path(raw_path: str) -> str:
+                normalized = str(raw_path or "").replace("\\", "/").strip().lstrip("/")
+                if not normalized:
+                    return ""
+                parts = normalized.split("/")
+                if ".." in parts:
+                    return ""
+                if normalized.startswith("frontend/"):
+                    return normalized
+                return f"frontend/{normalized}"
+
             _node_modules = os.path.join(frontend_dir, "node_modules")
             if os.path.exists(frontend_dir) and not os.path.exists(_node_modules):
                 try:
@@ -785,9 +796,15 @@ class GenerationOrchestrator:
                 # Collect the broken files referenced in errors
                 broken_fps = set()
                 for el in error_lines:
-                    m = _re.search(r"src/[^\s:]+\.ts", el)
+                    m = _re.search(r"src/[^\s:]+\.(ts|html|css)", el)
                     if m:
-                        broken_fps.add("frontend/" + m.group(0))
+                        _frontend_fp = _normalize_frontend_path(m.group(0))
+                        if _frontend_fp:
+                            broken_fps.add(_frontend_fp)
+                            if _frontend_fp.endswith(".html"):
+                                _ts_fp = _frontend_fp[:-5] + ".ts"
+                                if _ts_fp in frontend_files:
+                                    broken_fps.add(_ts_fp)
 
                 broken_contents = {
                     fp: frontend_files[fp]
@@ -817,6 +834,7 @@ class GenerationOrchestrator:
                         "RULES:\n"
                         "- Only import files that exist in the provided file list\n"
                         "- Do NOT add new component imports to app-routing or app.module\n"
+                        "- If a referenced model/service file does not exist, either create it or remove the import\n"
                         "- Fix TypeScript strict errors (add '!' or '| undefined', initialize properties)\n"
                         "- Remove any 'window[\"ngRef\"]' usage in main.ts\n"
                         "- Return a JSON object {filepath: corrected_content} for ONLY the files that need fixing.\n\n"
@@ -829,99 +847,108 @@ class GenerationOrchestrator:
                     fix_result = llm.generate_structured_json(prompt=fix_prompt)
                     if isinstance(fix_result, dict):
                         for fp, fc in fix_result.items():
-                            if fp in LLM_SKIP_FILES and attempt < MAX_TEST_FIX_ATTEMPTS - 1:
+                            normalized_fp = _normalize_frontend_path(fp)
+                            if not normalized_fp:
+                                continue
+                            if normalized_fp in LLM_SKIP_FILES and attempt < MAX_TEST_FIX_ATTEMPTS - 1:
                                 continue
                             if fc and str(fc).strip():
-                                frontend_files[fp] = str(fc)
-                                abs_path = os.path.join(str(project_root), fp)
+                                frontend_files[normalized_fp] = str(fc)
+                                abs_path = os.path.join(str(project_root), normalized_fp)
                                 os.makedirs(os.path.dirname(abs_path), exist_ok=True)
                                 with open(abs_path, "w") as fh:
                                     fh.write(str(fc))
-                                logger.info("LLM build-fix applied: %s (attempt %d)", fp, attempt + 1)
+                                logger.info("LLM build-fix applied: %s (attempt %d)", normalized_fp, attempt + 1)
                 except Exception:
                     logger.warning("LLM build-fix pass failed on attempt %d", attempt + 1, exc_info=True)
 
             # --- Automated Test Generation and LLM Test-Fix Loop ---
-            # 1. Generate tests for backend and frontend
-            from app.services.llm.openai_provider import OpenAIProvider
-            llm_test = OpenAIProvider()
-            MAX_TEST_FIX_ATTEMPTS = 3
+            # 1. Generate tests for backend and frontend (only if build is healthy)
+            if _build_succeeded:
+                from app.services.llm.openai_provider import OpenAIProvider
+                llm_test = OpenAIProvider()
+                MAX_TEST_FIX_ATTEMPTS = 3
 
-            def _generate_tests_for_file(file_path, file_content):
-                if file_path.endswith(".ts") and not file_path.endswith(".spec.ts"):
-                    prompt = (
-                        f"Write a comprehensive Angular unit test (.spec.ts) for the following file. "
-                        f"Use Jasmine and TestBed. Return ONLY the .spec.ts code.\n\n{file_content}"
+                def _generate_tests_for_file(file_path, file_content):
+                    if file_path.endswith(".ts") and not file_path.endswith(".spec.ts"):
+                        prompt = (
+                            f"Write a comprehensive Angular unit test (.spec.ts) for the following file. "
+                            f"Use Jasmine and TestBed. Return ONLY the .spec.ts code.\n\n{file_content}"
+                        )
+                        return llm_test.generate_code_block(prompt=prompt, language="typescript")
+                    elif file_path.endswith(".py") and "/app/" in file_path:
+                        prompt = (
+                            f"Write a comprehensive pytest test file for the following Python module. "
+                            f"Return ONLY the test code.\n\n{file_content}"
+                        )
+                        return llm_test.generate_code_block(prompt=prompt, language="python")
+                    return None
+
+                # Generate backend tests
+                for file_path, file_content in list(backend_files.items()):
+                    if file_path.endswith(".py") and "/app/" in file_path:
+                        test_code = _generate_tests_for_file(file_path, file_content)
+                        if test_code and test_code.strip():
+                            test_path = file_path.replace("/app/", "/tests/test_")
+                            if not test_path.endswith(".py"):
+                                test_path += ".py"
+                            backend_files[test_path] = test_code
+
+                # Generate frontend tests
+                for file_path, file_content in list(frontend_files.items()):
+                    if file_path.endswith(".ts") and not file_path.endswith(".spec.ts") and file_path not in LLM_SKIP_FILES:
+                        test_code = _generate_tests_for_file(file_path, file_content)
+                        if test_code and test_code.strip():
+                            test_path = file_path.replace(".ts", ".spec.ts")
+                            frontend_files[test_path] = test_code
+
+                # 3. Run backend tests (pytest)
+                for attempt in range(MAX_TEST_FIX_ATTEMPTS):
+                    backend_test_result = subprocess.run([
+                        "pytest", os.path.join(str(project_root), "tests")
+                    ], capture_output=True, text=True)
+                    if backend_test_result.returncode == 0:
+                        break
+                    # If failed, ask LLM to fix code
+                    fail_prompt = (
+                        "The following pytest tests failed. Fix the code so all tests pass. "
+                        "Return only the corrected code files as a JSON object: {filepath: content}.\n"
+                        f"Test output:\n{backend_test_result.stdout}\n"
                     )
-                    return llm_test.generate_code_block(prompt=prompt, language="typescript")
-                elif file_path.endswith(".py") and "/app/" in file_path:
-                    prompt = (
-                        f"Write a comprehensive pytest test file for the following Python module. "
-                        f"Return ONLY the test code.\n\n{file_content}"
+                    fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    if isinstance(fix_result, dict):
+                        for fp, fc in fix_result.items():
+                            abs_path = os.path.join(str(project_root), fp)
+                            with open(abs_path, "w") as f:
+                                f.write(fc)
+                            backend_files[fp] = fc
+                # 4. Run frontend tests (ng test --watch=false)
+                for attempt in range(MAX_TEST_FIX_ATTEMPTS):
+                    try:
+                        frontend_test_result = subprocess.run([
+                            "npx", "ng", "test", "--watch=false", "--browsers=ChromeHeadless"
+                        ], cwd=os.path.join(str(project_root), "frontend"), capture_output=True, text=True, timeout=120)
+                    except Exception:
+                        break
+                    if frontend_test_result.returncode == 0:
+                        break
+                    fail_prompt = (
+                        "The following Angular tests failed. Fix the code so all tests pass. "
+                        "Return only the corrected code files as a JSON object: {filepath: content}.\n"
+                        f"Test output:\n{frontend_test_result.stdout}\n"
                     )
-                    return llm_test.generate_code_block(prompt=prompt, language="python")
-                return None
-
-            # Generate backend tests
-            for file_path, file_content in list(backend_files.items()):
-                if file_path.endswith(".py") and "/app/" in file_path:
-                    test_code = _generate_tests_for_file(file_path, file_content)
-                    if test_code and test_code.strip():
-                        test_path = file_path.replace("/app/", "/tests/test_")
-                        if not test_path.endswith(".py"):
-                            test_path += ".py"
-                        backend_files[test_path] = test_code
-
-            # Generate frontend tests
-            for file_path, file_content in list(frontend_files.items()):
-                if file_path.endswith(".ts") and not file_path.endswith(".spec.ts") and file_path not in LLM_SKIP_FILES:
-                    test_code = _generate_tests_for_file(file_path, file_content)
-                    if test_code and test_code.strip():
-                        test_path = file_path.replace(".ts", ".spec.ts")
-                        frontend_files[test_path] = test_code
-
-            # 3. Run backend tests (pytest)
-            for attempt in range(MAX_TEST_FIX_ATTEMPTS):
-                backend_test_result = subprocess.run([
-                    "pytest", os.path.join(str(project_root), "tests")
-                ], capture_output=True, text=True)
-                if backend_test_result.returncode == 0:
-                    break
-                # If failed, ask LLM to fix code
-                fail_prompt = (
-                    "The following pytest tests failed. Fix the code so all tests pass. "
-                    "Return only the corrected code files as a JSON object: {filepath: content}.\n"
-                    f"Test output:\n{backend_test_result.stdout}\n"
-                )
-                fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
-                if isinstance(fix_result, dict):
-                    for fp, fc in fix_result.items():
-                        abs_path = os.path.join(str(project_root), fp)
-                        with open(abs_path, "w") as f:
-                            f.write(fc)
-                        backend_files[fp] = fc
-            # 4. Run frontend tests (ng test --watch=false)
-            for attempt in range(MAX_TEST_FIX_ATTEMPTS):
-                try:
-                    frontend_test_result = subprocess.run([
-                        "npx", "ng", "test", "--watch=false", "--browsers=ChromeHeadless"
-                    ], cwd=os.path.join(str(project_root), "frontend"), capture_output=True, text=True, timeout=120)
-                except Exception as e:
-                    break
-                if frontend_test_result.returncode == 0:
-                    break
-                fail_prompt = (
-                    "The following Angular tests failed. Fix the code so all tests pass. "
-                    "Return only the corrected code files as a JSON object: {filepath: content}.\n"
-                    f"Test output:\n{frontend_test_result.stdout}\n"
-                )
-                fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
-                if isinstance(fix_result, dict):
-                    for fp, fc in fix_result.items():
-                        abs_path = os.path.join(str(project_root), fp)
-                        with open(abs_path, "w") as f:
-                            f.write(fc)
-                        frontend_files[fp] = fc
+                    fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    if isinstance(fix_result, dict):
+                        for fp, fc in fix_result.items():
+                            normalized_fp = _normalize_frontend_path(fp)
+                            if not normalized_fp:
+                                continue
+                            abs_path = os.path.join(str(project_root), normalized_fp)
+                            with open(abs_path, "w") as f:
+                                f.write(fc)
+                            frontend_files[normalized_fp] = fc
+            else:
+                logger.warning("Skipping automated tests because Angular build is still failing")
 
             # --- End Automated Test Generation and LLM Test-Fix Loop ---
 
@@ -1032,11 +1059,15 @@ class GenerationOrchestrator:
                             break
                         _broken = {}
                         for _el in _err_lines:
-                            _m = _re.search(r"src/[^\s:]+\.ts", _el)
+                            _m = _re.search(r"src/[^\s:]+\.(ts|html|css)", _el)
                             if _m:
-                                _fp = "frontend/" + _m.group(0)
+                                _fp = _normalize_frontend_path(_m.group(0))
                                 if _fp in frontend_files:
                                     _broken[_fp] = frontend_files[_fp]
+                                    if _fp.endswith(".html"):
+                                        _ts_fp = _fp[:-5] + ".ts"
+                                        if _ts_fp in frontend_files:
+                                            _broken[_ts_fp] = frontend_files[_ts_fp]
                         _err_summary = "\n".join(_err_lines[:50])
                         _fix_p = (
                             f"User prompt: {prompt}\nDomain: {domain}\n\n"
