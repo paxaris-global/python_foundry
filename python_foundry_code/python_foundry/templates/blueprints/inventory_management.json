@@ -1,0 +1,6 @@
+{
+  "domain": "inventory_management",
+  "default_features": ["auth", "stock_tracking", "supplier_management", "purchase_orders", "alerts", "reports"],
+  "entities": ["Item", "StockMovement", "Supplier", "PurchaseOrder", "Warehouse"],
+  "architecture_patterns": ["transactional_service_layer", "auditable_changes", "modular_frontend"]
+}

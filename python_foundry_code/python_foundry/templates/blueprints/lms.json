@@ -1,0 +1,6 @@
+{
+  "domain": "lms",
+  "default_features": ["auth", "course_management", "enrollment", "lesson_delivery", "assessment", "dashboard"],
+  "entities": ["User", "Course", "Lesson", "Enrollment", "Assessment"],
+  "architecture_patterns": ["module_isolation", "role_based_access", "event_logging"]
+}

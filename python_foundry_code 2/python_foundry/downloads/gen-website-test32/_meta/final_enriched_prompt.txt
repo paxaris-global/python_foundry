@@ -1,0 +1,251 @@
+You are generating production-grade full-stack code.
+User Prompt: Build a modern full-stack coffee shop e-commerce website with a premium and visually appealing UI. The frontend must be developed using Angular and the backend using Spring Boot. The website should have a fancy and engaging homepage with a sticky header, responsive navbar, and a visually rich hero section with animations and call-to-action buttons. Include 2–3 main pages such as Home, Shop, and Cart.
+
+The homepage should include sections like featured products, coffee categories, brand story, and testimonials with smooth scrolling and hover effects. The UI should follow a dark, elegant, and minimal design inspired by premium coffee brands, with high-quality images and modern typography.
+
+Implement full backend operations including product CRUD APIs, cart functionality, and basic user handling. The cart should allow adding, updating, and removing items. Ensure responsive design, clean layout, and smooth user experience across devices. The code should be production-ready, well-structured, and scalable.
+
+ProjectSpec:
+{
+  "backend": {
+    "application_class": "GenWebsiteTest21Application",
+    "package": "com.generated.genwebsitetest21",
+    "stack": "springboot"
+  },
+  "description": "Build a modern full-stack coffee shop e-commerce website with a premium and visually appealing UI. The frontend must be developed using Angular and the backend using Spring Boot. The website should have a fancy and engaging homepage with a sticky header, responsive navbar, and a visually rich hero section with animations and call-to-action buttons. Include 2–3 main pages such as Home, Shop, and Cart.\n\nThe homepage should include sections like featured products, coffee categories, brand story, and testimonials with smooth scrolling and hover effects. The UI should follow a dark, elegant, and minimal design inspired by premium coffee brands, with high-quality images and modern typography.\n\nImplement full backend operations including product CRUD APIs, cart functionality, and basic user handling. The cart should allow adding, updating, and removing items. Ensure responsive design, clean layout, and smooth user experience across devices. The code should be production-ready, well-structured, and scalable.",
+  "domain": "ecommerce",
+  "entities": [
+    "product",
+    "user"
+  ],
+  "execution_mode": "generate",
+  "features": [
+    "add to cart",
+    "admin product management",
+    "basic checkout flow",
+    "brand story section",
+    "cart page",
+    "catalog",
+    "coffee categories",
+    "crud",
+    "dark theme ui",
+    "featured products section",
+    "hero section with cta",
+    "hover effects",
+    "orders",
+    "payments",
+    "product crud api",
+    "product details",
+    "product listing page",
+    "remove from cart",
+    "responsive design",
+    "responsive navbar",
+    "rest apis",
+    "smooth animations",
+    "testimonials section",
+    "update cart"
+  ],
+  "frontend": {
+    "stack": "angular"
+  },
+  "project_name": "gen-website-test21",
+  "scaffold_strategy": {
+    "default_features": [
+      "catalog",
+      "orders",
+      "payments"
+    ],
+    "domain": "ecommerce",
+    "selection_score": 0.1863,
+    "strategy": "domain_scaffold"
+  },
+  "web_discovery": {
+    "entities": [],
+    "features": [],
+    "suggested_architecture": []
+  }
+}
+
+APIContract:
+{
+  "info": {
+    "title": "gen-website-test21 API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/v1/customers": {
+      "get": {
+        "summary": "List customers"
+      },
+      "post": {
+        "summary": "Create customer"
+      }
+    },
+    "/api/v1/customers/{id}": {
+      "delete": {
+        "summary": "Delete customer"
+      },
+      "get": {
+        "summary": "Get customer"
+      },
+      "put": {
+        "summary": "Update customer"
+      }
+    }
+  }
+}
+
+RAGContext:
+[
+  {
+    "content": "# ecommerce-website\n\nBuild a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using: Frontend: Angular (latest version, standalone components, RxJS, best practices) Backend: Spring Boot (Java, REST APIs...\n\n## Stack\n- Backend: springboot\n- Frontend: angular\n\n## Features\n- add to cart\n- address management\n- admin dashboard\n- analytics\n- analytics dashboard\n- argocd integration\n- auth\n- banner carousel\n- brand filter\n- cart system\n- catalog\n- category filtering\n",
+    "metadata": {
+      "chunk_index": 0,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/README.md",
+      "language": "md",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.649751577884177
+  },
+  {
+    "content": "\"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wishlist, and c",
+    "metadata": {
+      "chunk_index": 24,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6398978190509588
+  },
+  {
+    "content": "\"summary\": \"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wish",
+    "metadata": {
+      "chunk_index": 12,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6324943174451766
+  },
+  {
+    "content": "\"summary\": \"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wish",
+    "metadata": {
+      "chunk_index": 6,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6324728817124688
+  },
+  {
+    "content": "\"pre_final_prompt\": \"You are generating production-grade full-stack code.\\nUser Prompt: Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet",
+    "metadata": {
+      "chunk_index": 28,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6217009871307663
+  },
+  {
+    "content": "\"final_enriched_prompt\": \"You are generating production-grade full-stack code.\\nUser Prompt: Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, t",
+    "metadata": {
+      "chunk_index": 47,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6106926290745427
+  }
+]
+
+FallbackContext:
+{
+  "scaffold_strategy": {
+    "default_features": [
+      "catalog",
+      "orders",
+      "payments"
+    ],
+    "domain": "ecommerce",
+    "selection_score": 0.1863,
+    "strategy": "domain_scaffold"
+  },
+  "selection_candidates": [
+    {
+      "name": "e-commerce-web-application-test",
+      "project_id": "0c7da885-b284-4109-9945-f423411c2558",
+      "score": 0.1863
+    },
+    {
+      "name": "e-commerce-test2",
+      "project_id": "abaf9754-cb76-4930-8f59-e80375fbe50c",
+      "score": 0.15
+    },
+    {
+      "name": "py39-compat-test",
+      "project_id": "70dd5155-d1d0-4435-abc8-d8c2d510613e",
+      "score": 0.124
+    },
+    {
+      "name": "test-celery-fix",
+      "project_id": "a5ee65b0-290b-45a3-9bdf-38c3f3d15c64",
+      "score": 0.124
+    }
+  ],
+  "selection_score": 0.1863,
+  "web_discovery": {
+    "reasons": [
+      "website_like_provided",
+      "no_strong_reusable_project",
+      "weak_adaptation_candidate",
+      "advanced_ui_or_production_requested",
+      "domain_benefits_from_reference_discovery"
+    ],
+    "used": true
+  }
+}
+
+
+WebDiscoverySummary:
+{
+  "backend_patterns": [],
+  "discovered_count": 0,
+  "extracted_components": [],
+  "extracted_entities": [],
+  "extracted_features": [],
+  "extracted_routes": [],
+  "queries": [
+    "https://www.starbucks.com ecommerce ui patterns",
+    "Build a modern full-stack coffee shop e-commerce website with a premium and visually appealing UI. The frontend must be developed using Angular and the backend using Spring Boot. The website should have a fancy and engaging homepage with a sticky header, responsive navbar, and a visually rich hero section with animations and call-to-action buttons. Include 2–3 main pages such as Home, Shop, and Cart.\n\nThe homepage should include sections like featured products, coffee categories, brand story, and testimonials with smooth scrolling and hover effects. The UI should follow a dark, elegant, and minimal design inspired by premium coffee brands, with high-quality images and modern typography.\n\nImplement full backend operations including product CRUD APIs, cart functionality, and basic user handling. The cart should allow adding, updating, and removing items. Ensure responsive design, clean layout, and smooth user experience across devices. The code should be production-ready, well-structured, and scalable. ecommerce add to cart admin product management basic checkout flow brand story section",
+    "ecommerce reference architecture add to cart admin product management basic checkout flow brand story section"
+  ],
+  "rag_ingestion": {
+    "attempted": true,
+    "indexed_documents": 0
+  },
+  "reasons": [
+    "website_like_provided",
+    "no_strong_reusable_project",
+    "weak_adaptation_candidate",
+    "advanced_ui_or_production_requested",
+    "domain_benefits_from_reference_discovery"
+  ],
+  "run_id": null,
+  "suggested_architecture": [],
+  "trusted_results": [],
+  "used": true
+}

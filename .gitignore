@@ -18,3 +18,17 @@ chroma_data/*
 !chroma_data/.gitkeep
 
 *.log
+
+# OS artifacts
+.DS_Store
+**/.DS_Store
+
+# Frontend dependencies
+node_modules/
+**/node_modules/
+
+# Java/Maven build outputs
+target/
+**/target/
+*.class
+*.jar

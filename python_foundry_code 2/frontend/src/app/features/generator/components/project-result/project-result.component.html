@@ -1,0 +1,69 @@
+<div *ngIf="project as p">
+  <div class="card result-card">
+    <div class="header">
+      <h2>{{ p.name }}</h2>
+      <span class="badge" *ngIf="p.domain; else noDomain">{{ p.domain }}</span>
+      <ng-template #noDomain><span class="badge">N/A</span></ng-template>
+    </div>
+
+    <p class="description">{{ p.description }}</p>
+
+    <div class="info-grid">
+      <ng-container *ngIf="p.final_prompt">
+        <details class="final-prompt-details">
+          <summary>Final Prompt Sent to LLM</summary>
+          <pre class="final-prompt-block">{{ p.final_prompt }}</pre>
+        </details>
+      </ng-container>
+      <div class="info-item">
+        <span class="label">Backend</span>
+        <span class="value">{{ p.backend_stack }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Frontend</span>
+        <span class="value">{{ p.frontend_stack }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Files Generated</span>
+        <span class="value">{{ p.generated_files.length }}</span>
+      </div>
+      <ng-container *ngIf="p.blueprint_used">
+        <div class="info-item">
+          <span class="label">Blueprint</span>
+          <span class="value">{{ p.blueprint_used }}</span>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Validation report debug output -->
+    <div *ngIf="p.validation_report" class="validation-debug">
+      <details open>
+        <summary>Validation Report</summary>
+        <div *ngIf="p.validation_report['valid']" style="color: green;">Validation passed</div>
+        <div *ngIf="!p.validation_report['valid']" style="color: red;">Validation failed</div>
+        <div *ngIf="errors.length">
+          <b>Errors:</b>
+          <ul>
+            <li *ngFor="let err of errors">{{ err }}</li>
+          </ul>
+        </div>
+        <div *ngIf="warnings.length">
+          <b>Warnings:</b>
+          <ul>
+            <li *ngFor="let warn of warnings">{{ warn }}</li>
+          </ul>
+        </div>
+        <pre style="font-size: 0.8em; background: #f8f8f8; padding: 8px; border-radius: 4px; max-height: 200px; overflow: auto;">{{ p.validation_report | json }}</pre>
+      </details>
+    </div>
+
+    <div class="actions">
+      <button class="primary" (click)="downloadClicked.emit()" [disabled]="isDownloading || !p.validation_report || !p.validation_report['valid']">
+        {{ isDownloading ? 'Downloading...' : 'Download ZIP' }}
+      </button>
+      <button class="secondary" (click)="newGenerationClicked.emit()">
+        New Generation
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,386 @@
+You are generating production-grade full-stack code.
+User Prompt: Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure.
+
+ProjectSpec:
+{
+  "backend": {
+    "application_class": "ECommerceWebsiteApplication",
+    "package": "com.generated.ecommercewebsite",
+    "stack": "springboot"
+  },
+  "base_project": {
+    "domain": "ecommerce",
+    "id": "b421f30f-e676-4bd2-9dee-8e3a68f13366",
+    "name": "e-commerse-website"
+  },
+  "description": "Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure.",
+  "domain": "ecommerce",
+  "entities": [
+    "order",
+    "product",
+    "user"
+  ],
+  "execution_mode": "hybrid_scaffold",
+  "features": [
+    "addeditdelete products",
+    "admin dashboard",
+    "api integration",
+    "auth",
+    "catalog",
+    "category filtering",
+    "checkout flow",
+    "jwt authentication",
+    "order management",
+    "orders",
+    "payments",
+    "product details page",
+    "product listing",
+    "responsive design",
+    "search functionality",
+    "shopping cart",
+    "user authentication"
+  ],
+  "frontend": {
+    "stack": "angular"
+  },
+  "project_name": "e-commerce-website",
+  "scaffold_strategy": {
+    "default_features": [
+      "catalog",
+      "orders",
+      "payments"
+    ],
+    "domain": "ecommerce",
+    "selection_score": 0.5128,
+    "strategy": "hybrid_scaffold"
+  },
+  "web_discovery": {
+    "entities": [],
+    "features": [],
+    "suggested_architecture": []
+  }
+}
+
+APIContract:
+{
+  "info": {
+    "title": "e-commerce-website API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/v1/customers": {
+      "get": {
+        "summary": "List customers"
+      },
+      "post": {
+        "summary": "Create customer"
+      }
+    },
+    "/api/v1/customers/{id}": {
+      "delete": {
+        "summary": "Delete customer"
+      },
+      "get": {
+        "summary": "Get customer"
+      },
+      "put": {
+        "summary": "Update customer"
+      }
+    }
+  }
+}
+
+RAGContext:
+[
+  {
+    "content": "# ecommerce-website\n\nBuild a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using: Frontend: Angular (latest version, standalone components, RxJS, best practices) Backend: Spring Boot (Java, REST APIs...\n\n## Stack\n- Backend: springboot\n- Frontend: angular\n\n## Features\n- add to cart\n- address management\n- admin dashboard\n- analytics\n- analytics dashboard\n- argocd integration\n- auth\n- banner carousel\n- brand filter\n- cart system\n- catalog\n- category filtering\n",
+    "metadata": {
+      "chunk_index": 0,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/README.md",
+      "language": "md",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6970160912175711
+  },
+  {
+    "content": "\"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wishlist, and c",
+    "metadata": {
+      "chunk_index": 24,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6862619044322348
+  },
+  {
+    "content": "\"summary\": \"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wish",
+    "metadata": {
+      "chunk_index": 12,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6726533797450305
+  },
+  {
+    "content": "\"summary\": \"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profile, wish",
+    "metadata": {
+      "chunk_index": 6,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6726529212745408
+  },
+  {
+    "content": "\"pre_final_prompt\": \"You are generating production-grade full-stack code.\\nUser Prompt: Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet",
+    "metadata": {
+      "chunk_index": 28,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6444735824548715
+  },
+  {
+    "content": "\"raw_user_prompt\": \"Build a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using:\\n\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\nDatabase: PostgreSQL or MySQL\\n\\n---\\n\\nUI/UX Requirements:\\n\\n* Myntra-inspired modern UI with a clean and premium look\\n* Fully responsive (mobile, tablet, desktop)\\n* Sticky navbar with logo, search bar, categories, profi",
+    "metadata": {
+      "chunk_index": 1,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.6402123262773383
+  }
+]
+
+FallbackContext:
+{
+  "scaffold_strategy": {
+    "default_features": [
+      "catalog",
+      "orders",
+      "payments"
+    ],
+    "domain": "ecommerce",
+    "selection_score": 0.5128,
+    "strategy": "hybrid_scaffold"
+  },
+  "selection_candidates": [
+    {
+      "name": "e-commerse-website",
+      "project_id": "b421f30f-e676-4bd2-9dee-8e3a68f13366",
+      "score": 0.5128
+    },
+    {
+      "name": "test-website1",
+      "project_id": "e706072a-dc6e-43f8-88a5-37867c225f1f",
+      "score": 0.4146
+    },
+    {
+      "name": "bag-website",
+      "project_id": "1871b056-dde6-4d8e-a72b-bd618a47de34",
+      "score": 0.4
+    },
+    {
+      "name": "table-website",
+      "project_id": "fd7072c2-c595-4da0-b17f-f489473a3060",
+      "score": 0.3939
+    },
+    {
+      "name": "gen-website-test35",
+      "project_id": "1f31a87e-4649-4eaf-8eb8-423cdd3158d0",
+      "score": 0.363
+    }
+  ],
+  "selection_score": 0.5128,
+  "web_discovery": {
+    "reasons": [
+      "website_like_provided",
+      "no_strong_reusable_project",
+      "weak_adaptation_candidate",
+      "advanced_ui_or_production_requested",
+      "domain_benefits_from_reference_discovery"
+    ],
+    "used": true
+  }
+}
+
+
+AdaptationContext:
+{
+  "adaptation_diff": {
+    "add_features": [
+      "addeditdelete products",
+      "api integration",
+      "category filtering",
+      "product listing",
+      "search functionality",
+      "shopping cart"
+    ],
+    "keep_features": [
+      "admin dashboard",
+      "auth",
+      "catalog",
+      "checkout flow",
+      "jwt authentication",
+      "order management",
+      "orders",
+      "payments",
+      "product details page",
+      "responsive design",
+      "user authentication"
+    ],
+    "new_prompt_tokens": [
+      "allow",
+      "attractive",
+      "browse",
+      "details",
+      "footer",
+      "integration",
+      "items",
+      "navbar",
+      "panel",
+      "perform",
+      "production",
+      "professional",
+      "project",
+      "ready",
+      "runnable",
+      "structure",
+      "use",
+      "view"
+    ],
+    "remove_features": [
+      "add to cart",
+      "angular frontend",
+      "cart management",
+      "category management",
+      "crud",
+      "dashboard",
+      "hero section",
+      "inventory management",
+      "mobile-friendly design",
+      "modern ui",
+      "product catalog",
+      "product categories",
+      "product crud operations",
+      "promotional banners",
+      "rest apis",
+      "search and filter",
+      "smooth animations",
+      "spring boot backend"
+    ],
+    "website_like": "https://www.myntra.com"
+  },
+  "base_project_blueprint": "hybrid_scaffold",
+  "base_project_domain": "ecommerce",
+  "base_project_id": "b421f30f-e676-4bd2-9dee-8e3a68f13366",
+  "base_project_manifest": {
+    "api_contract_summary": [
+      "/api/v1/customers",
+      "/api/v1/customers/{id}"
+    ],
+    "backend": {
+      "application_class": "ECommerseWebsiteApplication",
+      "package": "com.generated.ecommersewebsite",
+      "stack": "springboot"
+    },
+    "blueprint": null,
+    "domain": "ecommerce",
+    "execution_mode": "hybrid_scaffold",
+    "features": [
+      "add to cart",
+      "admin dashboard",
+      "angular frontend",
+      "auth",
+      "cart management",
+      "catalog",
+      "category management",
+      "checkout flow",
+      "crud",
+      "dashboard",
+      "hero section",
+      "inventory management",
+      "jwt authentication",
+      "mobile-friendly design",
+      "modern ui",
+      "order management",
+      "orders",
+      "payments",
+      "product catalog",
+      "product categories",
+      "product crud operations",
+      "product details page",
+      "promotional banners",
+      "responsive design",
+      "rest apis",
+      "search and filter",
+      "smooth animations",
+      "spring boot backend",
+      "user authentication"
+    ],
+    "frontend": {
+      "stack": "angular"
+    },
+    "mandatory_files": [
+      "backend/pom.xml",
+      "backend/Dockerfile",
+      "frontend/package.json",
+      "frontend/Dockerfile",
+      "frontend/nginx.conf",
+      "docker-compose.yml",
+      "README.md",
+      ".env.example",
+      "_meta/final_enriched_prompt.txt",
+      "_meta/final_enriched_prompt.json"
+    ],
+    "project_name": "e-commerse-website",
+    "scaffold_strategy": "hybrid_scaffold"
+  },
+  "base_project_name": "e-commerse-website",
+  "base_project_path": "/Users/m5/new_foundry_with_github/python_foundry_code/python_foundry/generated_projects/e-commerse-website-b421f30f"
+}
+
+WebDiscoverySummary:
+{
+  "backend_patterns": [],
+  "discovered_count": 0,
+  "extracted_components": [],
+  "extracted_entities": [],
+  "extracted_features": [],
+  "extracted_routes": [],
+  "queries": [
+    "https://www.myntra.com ecommerce ui patterns",
+    "Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure. ecommerce addeditdelete products admin dashboard api integration auth",
+    "ecommerce reference architecture addeditdelete products admin dashboard api integration auth"
+  ],
+  "rag_ingestion": {
+    "attempted": true,
+    "indexed_documents": 0
+  },
+  "reasons": [
+    "website_like_provided",
+    "no_strong_reusable_project",
+    "weak_adaptation_candidate",
+    "advanced_ui_or_production_requested",
+    "domain_benefits_from_reference_discovery"
+  ],
+  "run_id": null,
+  "suggested_architecture": [],
+  "trusted_results": [],
+  "used": true
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "payroll_system",
+  "default_features": ["auth", "employee_management", "salary_cycles", "tax_rules", "payslips", "reports"],
+  "entities": ["Employee", "PayrollCycle", "Payslip", "TaxRule", "Department"],
+  "architecture_patterns": ["financial_integrity_checks", "approval_workflow", "secure_audit_logs"]
+}

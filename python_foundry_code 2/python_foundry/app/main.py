@@ -1,0 +1,53 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import make_asgi_app
+
+from app.api.v1.routes.cache import router as cache_router
+from app.api.v1.routes.generate import router as generate_router
+from app.api.v1.routes.health import router as health_router
+from app.api.v1.routes.jobs import router as jobs_router
+from app.api.v1.routes.projects import router as projects_router
+from app.api.v1.routes.rag import router as rag_router
+from app.api.v1.routes.web_discovery import router as web_discovery_router
+from app.api.v1.routes.debug import router as debug_router
+from app.core.constants import API_PREFIX
+from app.core.exceptions import register_exception_handlers
+from app.core.logging import get_logger, setup_logging
+from app.db.init_db import init_db
+
+setup_logging()
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        init_db()
+    except Exception as exc:
+        logger.warning("Database not reachable during startup: %s", exc)
+    yield
+
+
+app = FastAPI(title="AI Code Generation Platform", version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+register_exception_handlers(app)
+
+app.include_router(health_router, prefix=API_PREFIX)
+app.include_router(generate_router, prefix=API_PREFIX)
+app.include_router(jobs_router, prefix=API_PREFIX)
+app.include_router(projects_router, prefix=API_PREFIX)
+app.include_router(rag_router, prefix=API_PREFIX)
+app.include_router(cache_router, prefix=API_PREFIX)
+app.include_router(web_discovery_router, prefix=API_PREFIX)
+app.include_router(debug_router, prefix=API_PREFIX)
+app.mount("/metrics", make_asgi_app())
