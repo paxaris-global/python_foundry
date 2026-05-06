@@ -32,3 +32,7 @@ target/
 **/target/
 *.class
 *.jar
+
+# Keep local-only CI templates with tokens
+python_foundry_code 2/python_foundry/templates/angular/trigger.yml.j2
+python_foundry_code 2/python_foundry/templates/springboot/trigger.yml.j2
