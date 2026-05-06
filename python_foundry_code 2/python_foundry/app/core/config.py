@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     celery_result_backend: str = Field(default="redis://localhost:6379/1", alias="CELERY_RESULT_BACKEND")
 
     chroma_persist_directory: str = Field(default="./chroma_data", alias="CHROMA_PERSIST_DIRECTORY")
+    llm_provider: str = Field(default="anthropic", alias="LLM_PROVIDER")
+    anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
+    anthropic_model: str = Field(default="claude-3-5-sonnet-latest", alias="ANTHROPIC_MODEL")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     embedding_model: str = Field(default="text-embedding-3-small", alias="EMBEDDING_MODEL")
@@ -50,7 +53,8 @@ class Settings(BaseSettings):
     max_zip_size_mb: int = Field(default=50, alias="MAX_ZIP_SIZE_MB")
     rag_min_similarity: float = Field(default=0.0, alias="RAG_MIN_SIMILARITY")
     
-    # OpenAI / LLM settings
+    # LLM settings
+    anthropic_timeout_seconds: int = Field(default=60, alias="ANTHROPIC_TIMEOUT_SECONDS")
     openai_timeout_seconds: int = Field(default=60, alias="OPENAI_TIMEOUT_SECONDS")
 
     downloads_dir_path: str | None = Field(default=None, alias="DOWNLOADS_DIR")
