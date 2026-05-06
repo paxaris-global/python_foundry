@@ -5,7 +5,7 @@ from app.core.constants import MANDATORY_OUTPUT_FILES
 from app.utils.file_utils import write_text_file
 
 # attempt lightweight regeneration for files that contain placeholders
-from app.services.llm.provider_factory import get_llm_provider
+from app.services.llm.openai_provider import OpenAIProvider
 
 
 def _is_placeholder(content: str) -> bool:
@@ -17,7 +17,7 @@ def _is_placeholder(content: str) -> bool:
 
 class RepairEngine:
     def __init__(self) -> None:
-        self.provider = get_llm_provider()
+        self.provider = OpenAIProvider()
 
     def _attempt_regenerate(self, file_path: str, final_prompt: Optional[str]) -> str:
         # build a concise regeneration prompt
