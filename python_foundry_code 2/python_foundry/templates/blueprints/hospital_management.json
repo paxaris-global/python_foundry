@@ -1,6 +1,0 @@
-{
-  "domain": "hospital_management",
-  "default_features": ["auth", "patient_records", "appointments", "doctor_schedule", "billing", "reports"],
-  "entities": ["Patient", "Doctor", "Appointment", "Prescription", "Invoice"],
-  "architecture_patterns": ["strict_validation", "audit_trail", "privacy_ready_design"]
-}

@@ -1,6 +1,0 @@
-{
-  "domain": "crm",
-  "default_features": ["auth", "customer_management", "lead_pipeline", "dashboard", "reports", "settings"],
-  "entities": ["Customer", "Lead", "Opportunity", "Activity", "User"],
-  "architecture_patterns": ["clean_layering", "service_orchestration", "api_contract_driven"]
-}

@@ -8,6 +8,19 @@ export interface Customer {
   name: string;
   email: string;
   company: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  brand?: string;
+  category?: string;
+  imageUrl?: string;
+  price: number;
+  stockQuantity?: number;
 }
 
 @Injectable({
@@ -36,5 +49,25 @@ export class ApiService {
 
   deleteCustomer(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/customers/${id}`);
+  }
+
+  getProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.baseUrl}/products`);
+  }
+
+  getProductById(id: string): Observable<Product> {
+    return this.http.get<Product>(`${this.baseUrl}/products/${id}`);
+  }
+
+  createProduct(product: Omit<Product, 'id'>): Observable<Product> {
+    return this.http.post<Product>(`${this.baseUrl}/products`, product);
+  }
+
+  updateProduct(id: string, product: Partial<Omit<Product, 'id'>>): Observable<Product> {
+    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, product);
+  }
+
+  deleteProduct(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/products/${id}`);
   }
 }

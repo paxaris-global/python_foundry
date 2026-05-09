@@ -39,7 +39,7 @@ class GenerateRequest(BaseModel):
         description="Explicit list of features to include (e.g. 'authentication', 'dashboard').",
     )
     website_like: Optional[str] = Field(
-        default=None, max_length=120,
+        default=None,
         description="URL of a reference website whose UX/features should inspire the generated project.",
     )
     mode_preference: Literal["auto", "reuse", "adapt", "generate", "hybrid_scaffold"] = Field(

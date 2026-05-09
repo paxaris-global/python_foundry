@@ -1,6 +1,0 @@
-{
-  "domain": "ecommerce",
-  "default_features": ["auth", "catalog", "cart", "orders", "payments", "admin_dashboard", "reports"],
-  "entities": ["User", "Product", "Category", "Cart", "Order", "Payment"],
-  "architecture_patterns": ["layered_architecture", "repository_pattern", "validation_first"]
-}

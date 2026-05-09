@@ -1,10 +1,121 @@
 You are generating production-grade full-stack code.
-User Prompt: Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure.
+User Prompt: Build a production-ready fashion ecommerce platform with Angular (frontend) + Spring Boot (backend), inspired by myntra.com information architecture (reference only; do NOT copy logos/brand assets).
+
+PRIMARY OBJECTIVE
+Generate code that is:
+1) visually strong and conversion-focused (Myntra-like UX structure),
+2) backend-frontend contract aligned,
+3) compile-safe and runnable without manual fixes.
+
+HARD VALIDATION GATES (MANDATORY)
+- Backend must pass: mvn -q -DskipTests compile
+- Frontend must pass: ng build
+- No broken imports, no missing modules/components, no orphan routes.
+- Do not return code that fails these checks.
+
+CONTRACT-FIRST BACKEND + FRONTEND RULES (MANDATORY)
+1) Define API contract first, then implement backend and frontend strictly from it.
+2) Backend endpoints under /api/v1 must include:
+   - /products CRUD
+   - /customers CRUD
+   - /orders CRUD
+   - /cart (get/add/update/remove)
+   - /wishlist (get/add/remove)
+3) Angular ApiService methods must map 1:1 to backend endpoints and DTO fields.
+4) Do NOT rename fields between backend DTOs and frontend models.
+5) Include consistent request/response schemas and proper HTTP status codes.
+
+BACKEND REQUIREMENTS
+- Spring Boot layered architecture:
+  - entity, dto, repository, service, controller, exception handler, config
+- Include Product, Customer, Order entities and DB migrations.
+- Include dev CORS for localhost:* and 127.0.0.1:*.
+- OpenApiConfig must use short sanitized static description only.
+- Never inject full user prompt text into Java string literals, annotations, or constants.
+- Prefer compile-safe deterministic code over overly complex code.
+
+FRONTEND REQUIREMENTS (Myntra-style UX)
+Global shell:
+- Top promo strip
+- Sticky navbar with brand placeholder, mega-menu categories, search, profile/wishlist/cart actions
+- Responsive behavior across desktop/tablet/mobile
+
+Routes:
+- /
+- /products
+- /product/:id
+- /cart
+- /checkout
+- /account
+- /admin
+
+Home page:
+- Hero carousel (3–5 slides) + CTA
+- Category tiles
+- Trending horizontal rail
+- Deals grid with badges + countdown mock
+- Shop by category cards
+- Featured brands strip
+- Product sections: New Arrivals, Best Sellers, Recommended
+- Footer with multi-column links, app badges, social placeholders
+
+Product listing page:
+- Left filter panel (price, brand, size, color, rating, discount)
+- Sort options (popularity, price asc/desc, newest)
+- Responsive product grid (4 desktop / 2 tablet / 1 mobile)
+- Product cards with rating, MRP strike-through, discount %, wishlist action, CTA
+
+Product detail page:
+- Gallery thumbnails + main image
+- Title, rating, price, offers
+- Size/color selectors
+- Add to cart / Buy now
+- Delivery checker mock
+- Return summary
+- Similar products carousel
+
+Core features:
+- Auth (signup/login/logout) scaffold
+- Wishlist
+- Cart with quantity controls
+- Checkout flow (address, payment mock, confirmation)
+- Profile + order history
+- Admin dashboard:
+  - product CRUD
+  - inventory management
+  - order management
+  - banner/offer management
+
+UI STYLE SYSTEM
+- Inter typography
+- 8px spacing rhythm
+- Soft shadows, rounded cards
+- Strong hierarchy and clean CTA design
+- Loading/empty/error states on major pages
+- Accessibility: semantic HTML, keyboard focus states, aria labels, contrast-safe colors
+
+DATA REQUIREMENTS
+- Realistic mock catalog with at least 40 products across categories
+- Banner metadata + category metadata + product seed data
+- Placeholder image URLs and realistic pricing/discounts
+
+ENGINEERING CONSTRAINTS
+- Clean modular Angular architecture:
+  - components, services, models, feature modules
+- Reusable UI components:
+  - banner, product-card, filter-panel, section-header
+- No extra libraries beyond Angular default + Angular Material unless absolutely required
+- Prefer simpler compile-safe implementation over fragile advanced effects
+
+OUTPUT QUALITY POLICY
+- If any enhancement pass fails, keep compile-safe fallback output.
+- Never generate partial code with unresolved symbols.
+- Ensure generated Dockerfiles and CI workflow files are valid and consistent with project paths.
 
 UIRequirements:
 {
   "brand_tone": "professional",
-  "layout_style": "dashboard",
+  "layout_style": "landing",
   "quality_bar": [
     "Use a modern, responsive layout with clear visual hierarchy",
     "Create reusable components and avoid plain boilerplate styling",
@@ -21,53 +132,52 @@ UIRequirements:
   },
   "ui_profile": "minimal",
   "visual_keywords": [
-    "modern",
-    "professional"
+    "dashboard"
   ]
 }
 
 ProjectSpec:
 {
   "backend": {
-    "application_class": "TestEcommerceApplication",
-    "package": "com.generated.testecommerce",
+    "application_class": "Test4MyntraWebsiteApplication",
+    "package": "com.generated.test4myntrawebsite",
     "stack": "springboot"
   },
   "base_project": {
     "domain": "ecommerce",
-    "id": "70e675d1-91f4-4db2-abff-9788ec19f598",
-    "name": "e-commerce-website"
+    "id": "d3a54bd2-419b-4845-9b50-5ff69115935a",
+    "name": "test-myntra"
   },
-  "description": "Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure.",
+  "description": "Build a production-ready fashion ecommerce platform with Angular (frontend) + Spring Boot (backend), inspired by myntra.com information architecture (reference only; do NOT copy lo",
   "domain": "ecommerce",
   "entities": [
+    "customer",
     "order",
     "product",
     "user"
   ],
-  "execution_mode": "reuse",
+  "execution_mode": "hybrid_scaffold",
   "features": [
-    "addeditdelete products",
-    "admin dashboard",
-    "api integration",
+    "admin-dashboard",
     "auth",
+    "cart",
     "catalog",
-    "category filtering",
-    "checkout flow",
-    "jwt authentication",
-    "order management",
+    "checkout",
+    "crud",
+    "dashboard",
+    "filters",
+    "inventory-management",
     "orders",
     "payments",
-    "product details page",
-    "product listing",
-    "responsive design",
-    "search functionality",
-    "shopping cart",
-    "user authentication"
+    "product-management",
+    "responsive-ui",
+    "search",
+    "sort",
+    "wishlist"
   ],
   "frontend": {
     "brand_tone": "professional",
-    "layout_style": "dashboard",
+    "layout_style": "landing",
     "stack": "angular",
     "theme_tokens": {
       "accent": "#64748b",
@@ -79,11 +189,10 @@ ProjectSpec:
     },
     "ui_profile": "minimal",
     "visual_keywords": [
-      "modern",
-      "professional"
+      "dashboard"
     ]
   },
-  "project_name": "test-ecommerce",
+  "project_name": "test4-myntra-website",
   "scaffold_strategy": {
     "default_features": [
       "catalog",
@@ -91,8 +200,8 @@ ProjectSpec:
       "payments"
     ],
     "domain": "ecommerce",
-    "selection_score": 1.0,
-    "strategy": "reuse_existing_project"
+    "selection_score": 0.578,
+    "strategy": "hybrid_scaffold"
   },
   "web_discovery": {
     "entities": [],
@@ -104,7 +213,7 @@ ProjectSpec:
 APIContract:
 {
   "info": {
-    "title": "test-ecommerce API",
+    "title": "test4-myntra-website API",
     "version": "1.0.0"
   },
   "openapi": "3.0.3",
@@ -127,6 +236,25 @@ APIContract:
       "put": {
         "summary": "Update customer"
       }
+    },
+    "/api/v1/products": {
+      "get": {
+        "summary": "List products"
+      },
+      "post": {
+        "summary": "Create product"
+      }
+    },
+    "/api/v1/products/{id}": {
+      "delete": {
+        "summary": "Delete product"
+      },
+      "get": {
+        "summary": "Get product"
+      },
+      "put": {
+        "summary": "Update product"
+      }
     }
   }
 }
@@ -134,76 +262,76 @@ APIContract:
 RAGContext:
 [
   {
-    "content": "# e-commerce-website\n\nBuild a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categori",
+    "content": "{\n  \"openapi\": \"3.0.3\",\n  \"info\": {\n    \"title\": \"ecommerce-website API\",\n    \"version\": \"1.0.0\"\n  },\n  \"paths\": {\n    \"/api/v1/products\": {\n      \"get\": {\n        \"summary\": \"List products\"\n      },\n      \"post\": {\n        \"summary\": \"Create product\"\n      }\n    },\n    \"/api/v1/products/{id}\": {\n      \"get\": {\n        \"summary\": \"Get product\"\n      },\n      \"put\": {\n        \"summary\": \"Update product\"\n      },\n      \"delete\": {\n        \"summary\": \"Delete product\"\n      }\n    }\n  }\n}",
     "metadata": {
       "chunk_index": 0,
-      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/e-commerce-website-a231271e/README.md",
-      "language": "md",
-      "module_type": "ecommerce",
-      "source_type": "generated_project",
-      "tags": "addeditdelete products,admin dashboard,api integration,auth,catalog,category filtering,checkout flow,jwt authentication,order management,orders,payments,product details page,product listing,responsive design,search functionality,shopping cart,user authentication"
-    },
-    "score": 0.830319161480002
-  },
-  {
-    "content": "# e-commerce-website\n\nBuild a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categori",
-    "metadata": {
-      "chunk_index": 0,
-      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/e-commerce-website-70e675d1/README.md",
-      "language": "md",
-      "module_type": "ecommerce",
-      "source_type": "generated_project",
-      "tags": "addeditdelete products,admin dashboard,api integration,auth,catalog,category filtering,checkout flow,jwt authentication,order management,orders,payments,product details page,product listing,responsive design,search functionality,shopping cart,user authentication"
-    },
-    "score": 0.830319161480002
-  },
-  {
-    "content": "# gene-website-test\n\nBuild a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categorie",
-    "metadata": {
-      "chunk_index": 0,
-      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/gene-website-test-cc724b95/README.md",
-      "language": "md",
-      "module_type": "ecommerce",
-      "source_type": "generated_project",
-      "tags": "addeditdelete products,admin dashboard,api integration,auth,catalog,category filtering,checkout flow,jwt authentication,order management,orders,payments,product details page,product listing,responsive design,search functionality,shopping cart,user authentication"
-    },
-    "score": 0.7509444816932839
-  },
-  {
-    "content": "# ecommerce-website\n\nBuild a fully functional, production-ready Clothing E-commerce Web Application (Myntra-like) using: Frontend: Angular (latest version, standalone components, RxJS, best practices) Backend: Spring Boot (Java, REST APIs...\n\n## Stack\n- Backend: springboot\n- Frontend: angular\n\n## Features\n- add to cart\n- address management\n- admin dashboard\n- analytics\n- analytics dashboard\n- argocd integration\n- auth\n- banner carousel\n- brand filter\n- cart system\n- catalog\n- category filtering\n",
-    "metadata": {
-      "chunk_index": 0,
-      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/README.md",
-      "language": "md",
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/api-contract.json",
+      "language": "json",
       "module_type": "ecommerce",
       "source_type": "generated_project",
       "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
     },
-    "score": 0.6993991568673916
+    "score": 0.0021050517709242677
   },
   {
-    "content": "Clothing E-commerce Web Application (Myntra-like) using:\\\\\\\\n\\\\\\\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\\\\\\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\\\\\\\nDatabase: PostgreSQL or MySQL\\\\\\\\n\\\\\\\\n---\\\\\\\\n\\\\\\\\nUI/UX Requirements:\\\\\\\\n\\\\\\\\n* Myntra-inspired modern UI with a clean and premium look\\\\\\\\n* Fully responsive (mobile, tablet, desktop)\\\\\\\\n* Sticky navbar with logo, search bar, categories, profile, wishlist, and c\\\",\\n   ",
+    "content": "\\\"Integer\\\"\\n    },\\n    {\\n      \\\"name\\\": \\\"rating\\\",\\n      \\\"nullable\\\": true,\\n      \\\"type\\\": \\\"Double\\\"\\n    }\\n  ],\\n  \\\"project_name\\\": \\\"ecommerce-website\\\",\\n  \\\"scaffold_strategy\\\": {\\n    \\\"default_features\\\": [\\n      \\\"catalog\\\",\\n      \\\"orders\\\",\\n      \\\"payments\\\"\\n    ],\\n    \\\"domain\\\": \\\"ecommerce\\\",\\n    \\\"selection_score\\\": 0.0737,\\n    \\\"strategy\\\": \\\"domain_scaffold\\\"\\n  },\\n  \\\"web_discovery\\\": {\\n    \\\"entities\\\": [],\\n    \\\"features\\\": [],\\n    \\\"suggested_architectu",
     "metadata": {
-      "chunk_index": 32,
-      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/gene-website-test-cc724b95/_meta/final_enriched_prompt.json",
+      "chunk_index": 55,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.0021043133993607042
+  },
+  {
+    "content": "\\\"Integer\\\"\\n    },\\n    {\\n      \\\"name\\\": \\\"rating\\\",\\n      \\\"nullable\\\": true,\\n      \\\"type\\\": \\\"Double\\\"\\n    }\\n  ],\\n  \\\"project_name\\\": \\\"ecommerce-website\\\",\\n  \\\"scaffold_strategy\\\": {\\n    \\\"default_features\\\": [\\n      \\\"catalog\\\",\\n      \\\"orders\\\",\\n      \\\"payments\\\"\\n    ],\\n    \\\"domain\\\": \\\"ecommerce\\\",\\n    \\\"selection_score\\\": 0.0737,\\n    \\\"strategy\\\": \\\"domain_scaffold\\\"\\n  },\\n  \\\"web_discovery\\\": {\\n    \\\"entities\\\": [],\\n    \\\"features\\\": [],\\n    \\\"suggested_architectu",
+    "metadata": {
+      "chunk_index": 36,
+      "file_path": "/app/generated_projects/ecommerce-website-ae8e9a3e/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "add to cart,address management,admin dashboard,analytics,analytics dashboard,argocd integration,auth,banner carousel,brand filter,cart system,catalog,category filtering,category navigation,checkout flow,cicd pipeline support,color filter,coupon system,crud,dashboard,database integration,deals and offers,docker support,featured categories,global exception handling,home page,image gallery,infinite scroll,input validation,jpahibernate,jwt authentication,kubernetes deployment,lazy loading,move to cart,myntra-like ui,order history,order management,order placement,order tracking,orders,pagination,payments,performance optimization,price filter,product description,product details page,product listing,product management,profile management,rating filter,remove from cart,responsive design,rest apis,review,role-based access control,search bar with suggestions,search with suggestions,size filter,size selection,sorting options,spring security,sticky navbar,toast notifications,trending products,update cart quantity,user login,user management,user signup,wishlist,wishlist feature,zoom feature"
+    },
+    "score": 0.0021043133993607042
+  },
+  {
+    "content": "class ProductCatalogApplication {\\\\n    public static void main(String[] args) {\\\\n        SpringApplication.run(ProductCatalogApplication.class, args);\\\\n    }\\\\n}\\\",\\n    \\\"metadata\\\": {\\n      \\\"chunk_index\\\": 0,\\n      \\\"file_path\\\": \\\"/app/generated_projects/product-catalog-a02e539c/backend/src/main/java/com/generated/productcatalog/ProductCatalogApplication.java\\\",\\n      \\\"language\\\": \\\"java\\\",\\n      \\\"module_type\\\": \\\"ecommerce\\\",\\n      \\\"source_type\\\": \\\"generated_project\\\",\\n      \\\"",
+    "metadata": {
+      "chunk_index": 13,
+      "file_path": "/app/generated_projects/product-catalog-v3-d6e05a35/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "catalog,categories,crud,inventory,orders,payments,pricing,product-crud,search"
+    },
+    "score": 0.002103637936485773
+  },
+  {
+    "content": "class ProductCatalogApplication {\\\\n    public static void main(String[] args) {\\\\n        SpringApplication.run(ProductCatalogApplication.class, args);\\\\n    }\\\\n}\\\",\\n    \\\"metadata\\\": {\\n      \\\"chunk_index\\\": 0,\\n      \\\"file_path\\\": \\\"/app/generated_projects/product-catalog-a02e539c/backend/src/main/java/com/generated/productcatalog/ProductCatalogApplication.java\\\",\\n      \\\"language\\\": \\\"java\\\",\\n      \\\"module_type\\\": \\\"ecommerce\\\",\\n      \\\"source_type\\\": \\\"generated_project\\\",\\n      \\\"",
+    "metadata": {
+      "chunk_index": 22,
+      "file_path": "/app/generated_projects/product-catalog-v3-d6e05a35/_meta/final_enriched_prompt.json",
+      "language": "json",
+      "module_type": "ecommerce",
+      "source_type": "generated_project",
+      "tags": "catalog,categories,crud,inventory,orders,payments,pricing,product-crud,search"
+    },
+    "score": 0.0021036330747253892
+  },
+  {
+    "content": "{\n  \"openapi\": \"3.0.3\",\n  \"info\": {\n    \"title\": \"e-commerce-website API\",\n    \"version\": \"1.0.0\"\n  },\n  \"paths\": {\n    \"/api/v1/customers\": {\n      \"get\": {\n        \"summary\": \"List customers\"\n      },\n      \"post\": {\n        \"summary\": \"Create customer\"\n      }\n    },\n    \"/api/v1/customers/{id}\": {\n      \"get\": {\n        \"summary\": \"Get customer\"\n      },\n      \"put\": {\n        \"summary\": \"Update customer\"\n      },\n      \"delete\": {\n        \"summary\": \"Delete customer\"\n      }\n    }\n  }\n}",
+    "metadata": {
+      "chunk_index": 0,
+      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/e-commerce-website-70e675d1/api-contract.json",
       "language": "json",
       "module_type": "ecommerce",
       "source_type": "generated_project",
       "tags": "addeditdelete products,admin dashboard,api integration,auth,catalog,category filtering,checkout flow,jwt authentication,order management,orders,payments,product details page,product listing,responsive design,search functionality,shopping cart,user authentication"
     },
-    "score": 0.6902256145158704
-  },
-  {
-    "content": "Clothing E-commerce Web Application (Myntra-like) using:\\\\\\\\n\\\\\\\\nFrontend: Angular (latest version, standalone components, RxJS, best practices)\\\\\\\\nBackend: Spring Boot (Java, REST APIs, Spring Security, JPA/Hibernate)\\\\\\\\nDatabase: PostgreSQL or MySQL\\\\\\\\n\\\\\\\\n---\\\\\\\\n\\\\\\\\nUI/UX Requirements:\\\\\\\\n\\\\\\\\n* Myntra-inspired modern UI with a clean and premium look\\\\\\\\n* Fully responsive (mobile, tablet, desktop)\\\\\\\\n* Sticky navbar with logo, search bar, categories, profile, wishlist, and c\\\",\\n   ",
-    "metadata": {
-      "chunk_index": 49,
-      "file_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/gene-website-test-cc724b95/_meta/final_enriched_prompt.json",
-      "language": "json",
-      "module_type": "ecommerce",
-      "source_type": "generated_project",
-      "tags": "addeditdelete products,admin dashboard,api integration,auth,catalog,category filtering,checkout flow,jwt authentication,order management,orders,payments,product details page,product listing,responsive design,search functionality,shopping cart,user authentication"
-    },
-    "score": 0.6901470650029992
+    "score": 0.0021035277421016445
   }
 ]
 
@@ -216,40 +344,43 @@ FallbackContext:
       "payments"
     ],
     "domain": "ecommerce",
-    "selection_score": 1.0,
-    "strategy": "reuse_existing_project"
+    "selection_score": 0.578,
+    "strategy": "hybrid_scaffold"
   },
   "selection_candidates": [
     {
-      "name": "e-commerce-website",
-      "project_id": "70e675d1-91f4-4db2-abff-9788ec19f598",
-      "score": 1.0
+      "name": "test-myntra",
+      "project_id": "d3a54bd2-419b-4845-9b50-5ff69115935a",
+      "score": 0.578
     },
     {
-      "name": "e-commerce-website",
-      "project_id": "a231271e-da47-44c2-9e0d-360823d8ec72",
-      "score": 1.0
+      "name": "myntra-website-test",
+      "project_id": "531c7917-b217-4d6b-98d0-bfd87d59dcd3",
+      "score": 0.5769
     },
     {
-      "name": "website-4",
-      "project_id": "0ff8a4ba-6636-4d38-b47a-503422a79e30",
-      "score": 1.0
+      "name": "test-website",
+      "project_id": "e1dac8a9-3241-4ceb-a7d0-ddd0057735d8",
+      "score": 0.5769
     },
     {
-      "name": "e-commerce-website",
-      "project_id": "1360b95c-a0a0-4ff8-a4ac-f1f817cb399a",
-      "score": 1.0
+      "name": "test-mytra-test",
+      "project_id": "a1b7ea60-56ea-4393-83cd-68d406ec3eb1",
+      "score": 0.5769
     },
     {
-      "name": "genwebsite",
-      "project_id": "2e8601a1-e622-4b02-a546-5cf2a103611c",
-      "score": 0.9875
+      "name": "test2-myntra-website",
+      "project_id": "399a3060-6d35-44e4-8b90-90df6cb2dab5",
+      "score": 0.3561
     }
   ],
-  "selection_score": 1.0,
+  "selection_score": 0.578,
   "web_discovery": {
     "reasons": [
       "website_like_provided",
+      "no_strong_reusable_project",
+      "low_rag_confidence",
+      "weak_adaptation_candidate",
       "advanced_ui_or_production_requested",
       "domain_benefits_from_reference_discovery"
     ],
@@ -257,6 +388,155 @@ FallbackContext:
   }
 }
 
+
+AdaptationContext:
+{
+  "adaptation_diff": {
+    "add_features": [],
+    "keep_features": [
+      "admin-dashboard",
+      "auth",
+      "cart",
+      "catalog",
+      "checkout",
+      "crud",
+      "dashboard",
+      "filters",
+      "inventory-management",
+      "orders",
+      "payments",
+      "product-management",
+      "responsive-ui",
+      "search",
+      "sort",
+      "wishlist"
+    ],
+    "new_prompt_tokens": [
+      "127",
+      "absolutely",
+      "account",
+      "action",
+      "actions",
+      "advanced",
+      "aligned",
+      "annotations",
+      "any",
+      "apiservice",
+      "are",
+      "asc",
+      "auth",
+      "beyond",
+      "checks",
+      "code",
+      "codes",
+      "colors",
+      "compile",
+      "complex",
+      "config",
+      "constants",
+      "contract",
+      "controller",
+      "cors",
+      "customer",
+      "customers",
+      "default",
+      "define",
+      "desc",
+      "description",
+      "detail",
+      "deterministic",
+      "dev",
+      "dockerfiles",
+      "dskiptests",
+      "dto",
+      "dtos",
+      "effects",
+      "endpoints",
+      "enhancement",
+      "ensure",
+      "entities",
+      "entity",
+      "exception",
+      "extra",
+      "fails",
+      "fallback",
+      "feature",
+      "fields"
+    ],
+    "remove_features": [],
+    "website_like": "https://www.myntra.com"
+  },
+  "base_project_blueprint": "domain_scaffold",
+  "base_project_domain": "ecommerce",
+  "base_project_id": "d3a54bd2-419b-4845-9b50-5ff69115935a",
+  "base_project_manifest": {
+    "api_contract_summary": [
+      "/api/v1/customers",
+      "/api/v1/customers/{id}"
+    ],
+    "backend": {
+      "application_class": "TestMyntraApplication",
+      "package": "com.generated.testmyntra",
+      "stack": "springboot"
+    },
+    "blueprint": null,
+    "domain": "ecommerce",
+    "execution_mode": "generate",
+    "features": [
+      "admin-dashboard",
+      "auth",
+      "cart",
+      "catalog",
+      "checkout",
+      "crud",
+      "dashboard",
+      "filters",
+      "inventory-management",
+      "orders",
+      "payments",
+      "product-management",
+      "responsive-ui",
+      "search",
+      "sort",
+      "wishlist"
+    ],
+    "frontend": {
+      "brand_tone": "professional",
+      "layout_style": "dashboard",
+      "stack": "angular",
+      "theme_tokens": {
+        "accent": "#64748b",
+        "background": "#f8fafc",
+        "muted": "#64748b",
+        "primary": "#334155",
+        "surface": "#ffffff",
+        "text": "#0f172a"
+      },
+      "ui_profile": "minimal",
+      "visual_keywords": [
+        "dashboard",
+        "modern",
+        "premium"
+      ]
+    },
+    "mandatory_files": [
+      "backend/pom.xml",
+      "backend/Dockerfile",
+      "frontend/package.json",
+      "frontend/Dockerfile",
+      "frontend/nginx.conf",
+      "docker-compose.yml",
+      "README.md",
+      ".env.example",
+      "_meta/final_enriched_prompt.txt",
+      "_meta/final_enriched_prompt.json"
+    ],
+    "project_name": "test-myntra",
+    "scaffold_strategy": "domain_scaffold"
+  },
+  "base_project_name": "test-myntra",
+  "base_project_path": "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry/generated_projects/test-myntra-d3a54bd2"
+}
 
 WebDiscoverySummary:
 {
@@ -267,9 +547,9 @@ WebDiscoverySummary:
   "extracted_features": [],
   "extracted_routes": [],
   "queries": [
-    "https://www.flipkart.com ecommerce ui patterns",
-    "Build a modern, responsive, and production-ready e-commerce website with a clean and attractive UI. Use Angular for the frontend and Spring Boot for the backend. The application should allow users to browse products, view product details, add items to cart, and perform checkout operations. Include user authentication and an admin panel for managing products and orders. Design a visually appealing homepage with a professional navbar, hero section, featured products, categories, and footer. Ensure smooth API integration, scalable architecture, and a fully runnable project with proper structure. ecommerce addeditdelete products admin dashboard api integration auth",
-    "ecommerce reference architecture addeditdelete products admin dashboard api integration auth"
+    "https://www.myntra.com ecommerce ui patterns",
+    "Build a production-ready fashion ecommerce platform with Angular (frontend) + Spring Boot (backend), inspired by myntra.com information architecture (reference only; do NOT copy logos/brand assets).\n\nPRIMARY OBJECTIVE\nGenerate code that is:\n1) visually strong and conversion-focused (Myntra-like UX structure),\n2) backend-frontend contract aligned,\n3) compile-safe and runnable without manual fixes.\n\nHARD VALIDATION GATES (MANDATORY)\n- Backend must pass: mvn -q -DskipTests compile\n- Frontend must pass: ng build\n- No broken imports, no missing modules/components, no orphan routes.\n- Do not return code that fails these checks.\n\nCONTRACT-FIRST BACKEND + FRONTEND RULES (MANDATORY)\n1) Define API contract first, then implement backend and frontend strictly from it.\n2) Backend endpoints under /api/v1 must include:\n   - /products CRUD\n   - /customers CRUD\n   - /orders CRUD\n   - /cart (get/add/update/remove)\n   - /wishlist (get/add/remove)\n3) Angular ApiService methods must map 1:1 to backend endpoints and DTO fields.\n4) Do NOT rename fields between backend DTOs and frontend models.\n5) Include consistent request/response schemas and proper HTTP status codes.\n\nBACKEND REQUIREMENTS\n- Spring Boot layered architecture:\n  - entity, dto, repository, service, controller, exception handler, config\n- Include Product, Customer, Order entities and DB migrations.\n- Include dev CORS for localhost:* and 127.0.0.1:*.\n- OpenApiConfig must use short sanitized static description only.\n- Never inject full user prompt text into Java string literals, annotations, or constants.\n- Prefer compile-safe deterministic code over overly complex code.\n\nFRONTEND REQUIREMENTS (Myntra-style UX)\nGlobal shell:\n- Top promo strip\n- Sticky navbar with brand placeholder, mega-menu categories, search, profile/wishlist/cart actions\n- Responsive behavior across desktop/tablet/mobile\n\nRoutes:\n- /\n- /products\n- /product/:id\n- /cart\n- /checkout\n- /account\n- /admin\n\nHome page:\n- Hero carousel (3–5 slides) + CTA\n- Category tiles\n- Trending horizontal rail\n- Deals grid with badges + countdown mock\n- Shop by category cards\n- Featured brands strip\n- Product sections: New Arrivals, Best Sellers, Recommended\n- Footer with multi-column links, app badges, social placeholders\n\nProduct listing page:\n- Left filter panel (price, brand, size, color, rating, discount)\n- Sort options (popularity, price asc/desc, newest)\n- Responsive product grid (4 desktop / 2 tablet / 1 mobile)\n- Product cards with rating, MRP strike-through, discount %, wishlist action, CTA\n\nProduct detail page:\n- Gallery thumbnails + main image\n- Title, rating, price, offers\n- Size/color selectors\n- Add to cart / Buy now\n- Delivery checker mock\n- Return summary\n- Similar products carousel\n\nCore features:\n- Auth (signup/login/logout) scaffold\n- Wishlist\n- Cart with quantity controls\n- Checkout flow (address, payment mock, confirmation)\n- Profile + order history\n- Admin dashboard:\n  - product CRUD\n  - inventory management\n  - order management\n  - banner/offer management\n\nUI STYLE SYSTEM\n- Inter typography\n- 8px spacing rhythm\n- Soft shadows, rounded cards\n- Strong hierarchy and clean CTA design\n- Loading/empty/error states on major pages\n- Accessibility: semantic HTML, keyboard focus states, aria labels, contrast-safe colors\n\nDATA REQUIREMENTS\n- Realistic mock catalog with at least 40 products across categories\n- Banner metadata + category metadata + product seed data\n- Placeholder image URLs and realistic pricing/discounts\n\nENGINEERING CONSTRAINTS\n- Clean modular Angular architecture:\n  - components, services, models, feature modules\n- Reusable UI components:\n  - banner, product-card, filter-panel, section-header\n- No extra libraries beyond Angular default + Angular Material unless absolutely required\n- Prefer simpler compile-safe implementation over fragile advanced effects\n\nOUTPUT QUALITY POLICY\n- If any enhancement pass fails, keep compile-safe fallback output.\n- Never generate partial code with unresolved symbols.\n- Ensure generated Dockerfiles and CI workflow files are valid and consistent with project paths. ecommerce admin-dashboard auth cart catalog",
+    "ecommerce reference architecture admin-dashboard auth cart catalog"
   ],
   "rag_ingestion": {
     "attempted": true,
@@ -277,6 +557,9 @@ WebDiscoverySummary:
   },
   "reasons": [
     "website_like_provided",
+    "no_strong_reusable_project",
+    "low_rag_confidence",
+    "weak_adaptation_candidate",
     "advanced_ui_or_production_requested",
     "domain_benefits_from_reference_discovery"
   ],

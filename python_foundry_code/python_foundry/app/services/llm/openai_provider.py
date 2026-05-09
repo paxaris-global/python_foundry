@@ -118,6 +118,8 @@ class OpenAIProvider(BaseLLMProvider):
         trace_id: Optional[str] = None,
         max_tokens: Optional[int] = None,
     ) -> dict[str, Any]:
+        if not self._enabled:
+            return {}
         payload = self._chat(
             prompt=f"Return strict JSON only.\n{prompt}",
             system_prompt=system_prompt,
@@ -141,6 +143,8 @@ class OpenAIProvider(BaseLLMProvider):
         system_prompt: Optional[str] = None,
         trace_id: Optional[str] = None,
     ) -> str:
+        if not self._enabled:
+            return ""
         content = self._chat(
             prompt=f"Generate {language} code only, without markdown fences.\\n{prompt}",
             system_prompt=system_prompt,

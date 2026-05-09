@@ -1,11 +1,13 @@
+import shutil
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Path as PathParam
+from fastapi import APIRouter, BackgroundTasks, Path as PathParam
 from fastapi.responses import FileResponse
 
 from app.api.deps import DBSession
+from app.core.config import get_settings
 from app.core.exceptions import AppException, NotFoundException, ServiceUnavailableException, ValidationException
 from app.core.logging import get_logger
 from app.models.project import Project
@@ -76,6 +78,15 @@ def get_project(project_id: ProjectIdPath, db: DBSession) -> ProjectResponse:
     )
 
 
+def _cleanup_generated_artifacts(project_path: str, zip_path: str) -> None:
+    try:
+        Path(zip_path).unlink(missing_ok=True)
+        if project_path:
+            shutil.rmtree(Path(project_path), ignore_errors=True)
+    except Exception:
+        logger.warning("Failed to cleanup generated artifacts after download", exc_info=True)
+
+
 @router.get(
     "/{project_id}/download",
     summary="Download project ZIP",
@@ -88,7 +99,7 @@ def get_project(project_id: ProjectIdPath, db: DBSession) -> ProjectResponse:
         503: {"description": "Service unavailable.", "model": ErrorResponse},
     },
 )
-def download_project_zip(project_id: ProjectIdPath, db: DBSession) -> FileResponse:
+def download_project_zip(project_id: ProjectIdPath, db: DBSession, background_tasks: BackgroundTasks) -> FileResponse:
     project = _get_project_or_404(project_id, db)
 
     zip_path = Path(project.zip_path)
@@ -107,8 +118,16 @@ def download_project_zip(project_id: ProjectIdPath, db: DBSession) -> FileRespon
         else:
             raise NotFoundException("ZIP artifact not found and project directory is missing")
 
-    return FileResponse(
+    response = FileResponse(
         path=str(zip_path),
         filename=f"{project.name}.zip",
         media_type="application/zip",
     )
+    # With STORE_FINAL_PROJECT=false we keep artifacts only until first download.
+    if not get_settings().store_final_project:
+        background_tasks.add_task(
+            _cleanup_generated_artifacts,
+            project.project_path,
+            str(zip_path),
+        )
+    return response
