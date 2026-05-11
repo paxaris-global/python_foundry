@@ -33,6 +33,30 @@ class RAGIndexer:
         self.embedding = EmbeddingService()
         self.chunker = CodeChunker(chunk_size=1200, chunk_overlap=120)
 
+    @staticmethod
+    def _should_skip_path(path: Path) -> bool:
+        # Avoid crawling dependency/build output directories that can contain
+        # tens of thousands of files and make indexing appear "stuck".
+        skip_dirs = {
+            "node_modules",
+            ".angular",
+            "dist",
+            "build",
+            "coverage",
+            ".cache",
+            ".next",
+            ".nuxt",
+            ".venv",
+            "venv",
+            "__pycache__",
+            ".git",
+            "target",
+            ".idea",
+            ".vscode",
+        }
+        parts = set(path.parts)
+        return bool(parts & skip_dirs)
+
     def index_paths(
         self,
         paths: list[str],
@@ -52,6 +76,8 @@ class RAGIndexer:
                 continue
 
             for file_path in base.rglob("*"):
+                if self._should_skip_path(file_path):
+                    continue
                 prepared = self._prepare_file_chunks(file_path)
                 if not prepared:
                     continue

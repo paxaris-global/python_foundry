@@ -1,5 +1,14 @@
 class ProjectSpecBuilder:
     @staticmethod
+    def _safe_backend_description(raw_summary: str) -> str:
+        # Keep OpenAPI description single-line and Java-string-safe.
+        compact = " ".join((raw_summary or "").split())
+        compact = compact.replace('"', "'")
+        if not compact:
+            return "Generated API for the requested application."
+        return compact[:180]
+
+    @staticmethod
     def _theme_tokens(ui_profile: str) -> dict:
         palettes = {
             "professional": {
@@ -53,10 +62,18 @@ class ProjectSpecBuilder:
         ui_profile = parsed_prompt.get("ui_profile", "professional")
         layout_style = parsed_prompt.get("layout_style", "workspace")
         brand_tone = parsed_prompt.get("brand_tone", "professional")
+        summary_lower = str(parsed_prompt.get("summary", "")).lower()
+        ecommerce_hints = {"ecommerce", "e-commerce", "catalog", "cart", "checkout", "product", "wishlist"}
+        if any(hint in summary_lower for hint in ecommerce_hints) or any(
+            feature.lower() in ecommerce_hints for feature in clean_features
+        ):
+            # Keep ecommerce experiences in a storefront-oriented shell instead of
+            # the default dashboard/workspace shell.
+            layout_style = "landing"
 
         return {
             "project_name": project_name,
-            "description": parsed_prompt["summary"],
+            "description": self._safe_backend_description(parsed_prompt.get("summary", "")),
             "features": clean_features,
             "entities": parsed_prompt.get("entities") or ["customer"],
             "backend": {

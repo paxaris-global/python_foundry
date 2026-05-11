@@ -25,6 +25,7 @@ from app.services.generation.pipeline import GenerationPipeline
 from app.services.generation.project_assembler import ProjectAssembler
 from app.services.generation.project_skeleton import ProjectSkeletonBuilder
 from app.services.generation.project_spec_builder import ProjectSpecBuilder
+from app.services.generation.post_generation_sanitizer import PostGenerationSanitizer
 from app.services.generation.prompt_debugger import PromptDebugger
 from app.services.generation.prompt_parser import PromptParser
 from app.services.generation.repair_engine import RepairEngine
@@ -560,8 +561,8 @@ class GenerationOrchestrator:
             )
 
             # LLM-powered code improvement step for frontend files
-            from app.services.llm.openai_provider import OpenAIProvider
-            llm = OpenAIProvider()
+            from app.services.llm.provider_factory import get_llm_provider
+            llm = get_llm_provider()
 
             features_str = ", ".join(project_spec.get("features", []))
             domain = project_spec.get("domain", "web application")
@@ -636,7 +637,11 @@ class GenerationOrchestrator:
                     continue
                 if file_path.endswith((".html", ".css", ".ts")):
                     llm_prompt = _build_llm_prompt(file_path, file_content)
-                    improved_content = llm.generate_code_block(prompt=llm_prompt, language="text")
+                    try:
+                        improved_content = llm.generate_code_block(prompt=llm_prompt, language="text")
+                    except Exception:
+                        logger.warning("LLM improvement pass failed for file=%s; keeping scaffolded content", file_path, exc_info=True)
+                        improved_content = ""
                     if improved_content and improved_content.strip():
                         frontend_files[file_path] = improved_content
 
@@ -673,6 +678,7 @@ class GenerationOrchestrator:
             import subprocess
             import os
             import re as _re
+            sanitizer = PostGenerationSanitizer()
             MAX_TEST_FIX_ATTEMPTS = 3
 
             # ── Step A: Resolve missing imports ──────────────────────────────────
@@ -705,7 +711,11 @@ class GenerationOrchestrator:
                             "and full implementation matching the domain and features. "
                             "Return ONLY the TypeScript code, no markdown fences."
                         )
-                        generated = llm.generate_code_block(prompt=gen_prompt, language="typescript")
+                        try:
+                            generated = llm.generate_code_block(prompt=gen_prompt, language="typescript")
+                        except Exception:
+                            logger.warning("LLM missing-import generation failed for file=%s", resolved, exc_info=True)
+                            generated = ""
                         if generated and generated.strip():
                             frontend_files[resolved] = generated
                             known_files.add(resolved)
@@ -862,26 +872,87 @@ class GenerationOrchestrator:
                 except Exception:
                     logger.warning("LLM build-fix pass failed on attempt %d", attempt + 1, exc_info=True)
 
+            # ── Step D2: Backend compile validation + targeted auto-repair ─────────
+            backend_dir = os.path.join(str(project_root), "backend")
+            _backend_compile_succeeded = False
+            for attempt in range(MAX_TEST_FIX_ATTEMPTS):
+                if not os.path.exists(backend_dir):
+                    break
+                try:
+                    compile_result = subprocess.run(
+                        ["mvn", "-q", "-DskipTests", "compile"],
+                        cwd=backend_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
+                    )
+                except Exception:
+                    break
+                if compile_result.returncode == 0:
+                    _backend_compile_succeeded = True
+                    logger.info("Backend compile succeeded on attempt %d", attempt + 1)
+                    break
+
+                compile_output = f"{compile_result.stdout}\n{compile_result.stderr}"
+                java_error_files = set(
+                    _re.findall(r"([A-Za-z0-9_/\.-]+\.java):\[\d+,\d+\]", compile_output.replace("\\", "/"))
+                )
+                repaired_any = False
+                for raw_path in java_error_files:
+                    rel_path = raw_path.strip().lstrip("/")
+                    if rel_path.startswith("src/"):
+                        full_path = os.path.join(backend_dir, rel_path)
+                    elif rel_path.startswith("backend/src/"):
+                        full_path = os.path.join(str(project_root), rel_path)
+                    else:
+                        continue
+                    if not os.path.exists(full_path):
+                        continue
+                    try:
+                        original = Path(full_path).read_text(encoding="utf-8")
+                        fixed = sanitizer.sanitize_text(original)
+                        if "unclosed string literal" in compile_output and sanitizer.has_unclosed_java_string(fixed):
+                            # Best-effort close for accidental trailing quote loss.
+                            lines = fixed.splitlines()
+                            rebuilt: list[str] = []
+                            for line in lines:
+                                if line.count('"') % 2 == 1 and line.strip().endswith(";"):
+                                    line = line.rstrip(";") + '";'
+                                rebuilt.append(line)
+                            fixed = "\n".join(rebuilt)
+                        if fixed != original:
+                            Path(full_path).write_text(fixed, encoding="utf-8")
+                            repaired_any = True
+                            logger.info("Auto-repaired backend java file: %s", full_path)
+                    except Exception:
+                        logger.warning("Backend auto-repair failed for %s", full_path, exc_info=True)
+
+                if not repaired_any:
+                    break
+
             # --- Automated Test Generation and LLM Test-Fix Loop ---
             # 1. Generate tests for backend and frontend (only if build is healthy)
-            if _build_succeeded:
-                from app.services.llm.openai_provider import OpenAIProvider
-                llm_test = OpenAIProvider()
+            if _build_succeeded and _backend_compile_succeeded:
+                from app.services.llm.provider_factory import get_llm_provider
+                llm_test = get_llm_provider()
                 MAX_TEST_FIX_ATTEMPTS = 3
 
                 def _generate_tests_for_file(file_path, file_content):
-                    if file_path.endswith(".ts") and not file_path.endswith(".spec.ts"):
-                        prompt = (
-                            f"Write a comprehensive Angular unit test (.spec.ts) for the following file. "
-                            f"Use Jasmine and TestBed. Return ONLY the .spec.ts code.\n\n{file_content}"
-                        )
-                        return llm_test.generate_code_block(prompt=prompt, language="typescript")
-                    elif file_path.endswith(".py") and "/app/" in file_path:
-                        prompt = (
-                            f"Write a comprehensive pytest test file for the following Python module. "
-                            f"Return ONLY the test code.\n\n{file_content}"
-                        )
-                        return llm_test.generate_code_block(prompt=prompt, language="python")
+                    try:
+                        if file_path.endswith(".ts") and not file_path.endswith(".spec.ts"):
+                            prompt = (
+                                f"Write a comprehensive Angular unit test (.spec.ts) for the following file. "
+                                f"Use Jasmine and TestBed. Return ONLY the .spec.ts code.\n\n{file_content}"
+                            )
+                            return llm_test.generate_code_block(prompt=prompt, language="typescript")
+                        elif file_path.endswith(".py") and "/app/" in file_path:
+                            prompt = (
+                                f"Write a comprehensive pytest test file for the following Python module. "
+                                f"Return ONLY the test code.\n\n{file_content}"
+                            )
+                            return llm_test.generate_code_block(prompt=prompt, language="python")
+                    except Exception:
+                        logger.warning("Skipping test generation for file=%s because LLM call failed", file_path, exc_info=True)
                     return None
 
                 # Generate backend tests
@@ -915,7 +986,11 @@ class GenerationOrchestrator:
                         "Return only the corrected code files as a JSON object: {filepath: content}.\n"
                         f"Test output:\n{backend_test_result.stdout}\n"
                     )
-                    fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    try:
+                        fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    except Exception:
+                        logger.warning("Skipping backend test-fix attempt because LLM call failed", exc_info=True)
+                        break
                     if isinstance(fix_result, dict):
                         for fp, fc in fix_result.items():
                             abs_path = os.path.join(str(project_root), fp)
@@ -937,7 +1012,11 @@ class GenerationOrchestrator:
                         "Return only the corrected code files as a JSON object: {filepath: content}.\n"
                         f"Test output:\n{frontend_test_result.stdout}\n"
                     )
-                    fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    try:
+                        fix_result = llm_test.generate_structured_json(prompt=fail_prompt)
+                    except Exception:
+                        logger.warning("Skipping frontend test-fix attempt because LLM call failed", exc_info=True)
+                        break
                     if isinstance(fix_result, dict):
                         for fp, fc in fix_result.items():
                             normalized_fp = _normalize_frontend_path(fp)
@@ -948,7 +1027,11 @@ class GenerationOrchestrator:
                                 f.write(fc)
                             frontend_files[normalized_fp] = fc
             else:
-                logger.warning("Skipping automated tests because Angular build is still failing")
+                logger.warning(
+                    "Skipping automated tests because compile gates are failing (frontend=%s backend=%s)",
+                    _build_succeeded,
+                    _backend_compile_succeeded,
+                )
 
             # --- End Automated Test Generation and LLM Test-Fix Loop ---
 
@@ -1149,6 +1232,9 @@ class GenerationOrchestrator:
                 project_root,
                 assembled_files_payload,
             )
+            sanitize_result = PostGenerationSanitizer().sanitize_generated_tree(project_root)
+            if sanitize_result.get("issues"):
+                logger.warning("Post-generation sanitizer detected issues: %s", sanitize_result["issues"][:10])
 
             structure_report = self.pipeline.execute_stage(
                 "validate_structure",

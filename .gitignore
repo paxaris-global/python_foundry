@@ -18,3 +18,39 @@ chroma_data/*
 !chroma_data/.gitkeep
 
 *.log
+
+# Generated downloads and backups (never commit)
+downloads/*
+!downloads/.gitkeep
+*.bundle
+repo-backup.bundle
+templates.zip
+
+# Frontend build/cache
+frontend/.angular/
+frontend/dist/
+
+
+# OS artifacts
+.DS_Store
+**/.DS_Store
+
+# Frontend dependencies
+node_modules/
+**/node_modules/
+
+# Java/Maven build outputs
+target/
+**/target/
+*.class
+*.jar
+
+# Local secrets and bulky artifacts
+paxo/.env
+/downloads/
+*.bundle
+repo-backup.bundle
+
+# Angular / Vite caches (nested frontend)
+**/.angular/
+**/frontend/dist/

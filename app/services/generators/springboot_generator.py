@@ -11,6 +11,8 @@ class SpringBootGenerator(BaseGenerator):
         package = project_spec["backend"]["package"]
         package_path = package.replace(".", "/")
         app_class = project_spec["backend"]["application_class"]
+        domain = str(project_spec.get("domain", "general")).lower()
+        ecommerce_mode = domain in {"ecommerce", "retail"}
 
         ctx = {
             "project_name": project_spec["project_name"],
@@ -25,6 +27,7 @@ class SpringBootGenerator(BaseGenerator):
             "entity_var": "customer",
             "base_path": "/api/v1/customers",
             "rag_hints": [item.get("content", "")[:180] for item in rag_context[:2]],
+            "domain": domain,
         }
 
         files: dict[str, str] = {
@@ -77,8 +80,26 @@ class SpringBootGenerator(BaseGenerator):
             "backend/.gitignore": self._gitignore(),
             f"backend/src/test/java/{package_path}/{app_class}Tests.java": self._test_java(package, app_class),
             f"backend/src/test/java/{package_path}/service/CustomerServiceImplTest.java": self._customer_service_test(package),
-            ".github/workflows/trigger.yml": self._trigger_workflow(),
+            ".github/workflows/backend-trigger.yml": self._trigger_workflow(),
         }
+        if ecommerce_mode:
+            files.update(
+                {
+                    f"backend/src/main/java/{package_path}/entity/Product.java": self._product_entity_java(package),
+                    f"backend/src/main/java/{package_path}/dto/ProductDto.java": self._product_dto_java(package),
+                    f"backend/src/main/java/{package_path}/repository/ProductRepository.java": self._product_repository_java(
+                        package
+                    ),
+                    f"backend/src/main/java/{package_path}/service/ProductService.java": self._product_service_java(package),
+                    f"backend/src/main/java/{package_path}/service/impl/ProductServiceImpl.java": self._product_service_impl_java(
+                        package
+                    ),
+                    f"backend/src/main/java/{package_path}/controller/ProductController.java": self._product_controller_java(
+                        package
+                    ),
+                    "backend/src/main/resources/db/migration/V2__create_products_table.sql": self._product_migration_sql(),
+                }
+            )
         return files
 
     @staticmethod
@@ -98,7 +119,7 @@ HELP.md
 
     @staticmethod
     def _trigger_workflow() -> str:
-        return """name: Trigger Central CI/CD
+        return """name: Build Push And GitOps Update (Backend)
 
 on:
   push:
@@ -106,23 +127,64 @@ on:
       - main
       - master
 
+permissions:
+  contents: write
+
 jobs:
-  trigger-central-workflow:
+  build-and-update:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Central Workflow
-        uses: peter-evans/repository-dispatch@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image variables
+        id: vars
+        run: |
+          IMAGE_REPO="devopspaxarisglobalrepo/finaltest36-admin-backend-test-backend"
+          IMAGE_TAG="${GITHUB_SHA}"
+          echo "image_repo=$IMAGE_REPO" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
-          repository: paxaris-global/paxo
-          event-type: build-image
-          client-payload: |
-            {
-              "repo": "${{ github.repository }}",
-              "ref_name": "${{ github.ref_name }}",
-              "ref": "${{ github.ref }}",
-              "sha": "${{ github.sha }}"
-            }
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ steps.vars.outputs.image_repo }}:latest
+            ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.image_tag }}
+
+      - name: Update k8 image tag
+        run: |
+          sed -E -i.bak "s|^([[:space:]]*)image:[[:space:]].*|\\1image: ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.image_tag }}|" k8/deployment.yaml
+          rm -f k8/deployment.yaml.bak
+
+      - name: Commit and push manifest changes
+        run: |
+          if git diff --quiet; then
+            echo "No manifest changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add k8/deployment.yaml
+          git commit -m "ci: update image tag [skip ci]"
+          git push
 """
 
     @staticmethod
@@ -391,5 +453,293 @@ class CustomerServiceImplTest {{
         assertThrows(ResourceNotFoundException.class, () -> customerService.delete(customerId));
     }}
 }}
+"""
+
+    @staticmethod
+    def _product_entity_java(package: str) -> str:
+        return f"""package {package}.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Entity
+@Table(name = "products")
+public class Product {{
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(length = 2000)
+    private String description;
+
+    @Column(nullable = false)
+    private BigDecimal price;
+
+    @Column(nullable = false)
+    private Integer stockQuantity;
+
+    private String brand;
+    private String category;
+    private String imageUrl;
+
+    public UUID getId() {{ return id; }}
+    public void setId(UUID id) {{ this.id = id; }}
+    public String getName() {{ return name; }}
+    public void setName(String name) {{ this.name = name; }}
+    public String getDescription() {{ return description; }}
+    public void setDescription(String description) {{ this.description = description; }}
+    public BigDecimal getPrice() {{ return price; }}
+    public void setPrice(BigDecimal price) {{ this.price = price; }}
+    public Integer getStockQuantity() {{ return stockQuantity; }}
+    public void setStockQuantity(Integer stockQuantity) {{ this.stockQuantity = stockQuantity; }}
+    public String getBrand() {{ return brand; }}
+    public void setBrand(String brand) {{ this.brand = brand; }}
+    public String getCategory() {{ return category; }}
+    public void setCategory(String category) {{ this.category = category; }}
+    public String getImageUrl() {{ return imageUrl; }}
+    public void setImageUrl(String imageUrl) {{ this.imageUrl = imageUrl; }}
+}}
+"""
+
+    @staticmethod
+    def _product_dto_java(package: str) -> str:
+        return f"""package {package}.dto;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public class ProductDto {{
+    private UUID id;
+    @NotBlank
+    private String name;
+    private String description;
+    @NotNull
+    @DecimalMin("0.0")
+    private BigDecimal price;
+    @NotNull
+    private Integer stockQuantity;
+    private String brand;
+    private String category;
+    private String imageUrl;
+
+    public UUID getId() {{ return id; }}
+    public void setId(UUID id) {{ this.id = id; }}
+    public String getName() {{ return name; }}
+    public void setName(String name) {{ this.name = name; }}
+    public String getDescription() {{ return description; }}
+    public void setDescription(String description) {{ this.description = description; }}
+    public BigDecimal getPrice() {{ return price; }}
+    public void setPrice(BigDecimal price) {{ this.price = price; }}
+    public Integer getStockQuantity() {{ return stockQuantity; }}
+    public void setStockQuantity(Integer stockQuantity) {{ this.stockQuantity = stockQuantity; }}
+    public String getBrand() {{ return brand; }}
+    public void setBrand(String brand) {{ this.brand = brand; }}
+    public String getCategory() {{ return category; }}
+    public void setCategory(String category) {{ this.category = category; }}
+    public String getImageUrl() {{ return imageUrl; }}
+    public void setImageUrl(String imageUrl) {{ this.imageUrl = imageUrl; }}
+}}
+"""
+
+    @staticmethod
+    def _product_repository_java(package: str) -> str:
+        return f"""package {package}.repository;
+
+import {package}.entity.Product;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductRepository extends JpaRepository<Product, UUID> {{
+}}
+"""
+
+    @staticmethod
+    def _product_service_java(package: str) -> str:
+        return f"""package {package}.service;
+
+import {package}.dto.ProductDto;
+import java.util.List;
+import java.util.UUID;
+
+public interface ProductService {{
+    List<ProductDto> findAll();
+    ProductDto findById(UUID id);
+    ProductDto create(ProductDto dto);
+    ProductDto update(UUID id, ProductDto dto);
+    void delete(UUID id);
+}}
+"""
+
+    @staticmethod
+    def _product_service_impl_java(package: str) -> str:
+        return f"""package {package}.service.impl;
+
+import {package}.dto.ProductDto;
+import {package}.entity.Product;
+import {package}.exception.ResourceNotFoundException;
+import {package}.repository.ProductRepository;
+import {package}.service.ProductService;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class ProductServiceImpl implements ProductService {{
+    private final ProductRepository productRepository;
+
+    public ProductServiceImpl(ProductRepository productRepository) {{
+        this.productRepository = productRepository;
+    }}
+
+    @Override
+    public List<ProductDto> findAll() {{
+        return productRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    }}
+
+    @Override
+    public ProductDto findById(UUID id) {{
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
+        return toDto(product);
+    }}
+
+    @Override
+    public ProductDto create(ProductDto dto) {{
+        Product product = toEntity(dto);
+        product.setId(null);
+        return toDto(productRepository.save(product));
+    }}
+
+    @Override
+    public ProductDto update(UUID id, ProductDto dto) {{
+        Product existing = productRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
+        existing.setName(dto.getName());
+        existing.setDescription(dto.getDescription());
+        existing.setPrice(dto.getPrice());
+        existing.setStockQuantity(dto.getStockQuantity());
+        existing.setBrand(dto.getBrand());
+        existing.setCategory(dto.getCategory());
+        existing.setImageUrl(dto.getImageUrl());
+        return toDto(productRepository.save(existing));
+    }}
+
+    @Override
+    public void delete(UUID id) {{
+        if (!productRepository.existsById(id)) {{
+            throw new ResourceNotFoundException("Product not found: " + id);
+        }}
+        productRepository.deleteById(id);
+    }}
+
+    private ProductDto toDto(Product entity) {{
+        ProductDto dto = new ProductDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setPrice(entity.getPrice());
+        dto.setStockQuantity(entity.getStockQuantity());
+        dto.setBrand(entity.getBrand());
+        dto.setCategory(entity.getCategory());
+        dto.setImageUrl(entity.getImageUrl());
+        return dto;
+    }}
+
+    private Product toEntity(ProductDto dto) {{
+        Product entity = new Product();
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setPrice(dto.getPrice());
+        entity.setStockQuantity(dto.getStockQuantity());
+        entity.setBrand(dto.getBrand());
+        entity.setCategory(dto.getCategory());
+        entity.setImageUrl(dto.getImageUrl());
+        return entity;
+    }}
+}}
+"""
+
+    @staticmethod
+    def _product_controller_java(package: str) -> str:
+        return f"""package {package}.controller;
+
+import {package}.dto.ProductDto;
+import {package}.service.ProductService;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController {{
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {{
+        this.productService = productService;
+    }}
+
+    @GetMapping
+    public ResponseEntity<List<ProductDto>> findAll() {{
+        return ResponseEntity.ok(productService.findAll());
+    }}
+
+    @GetMapping("/{{id}}")
+    public ResponseEntity<ProductDto> findById(@PathVariable UUID id) {{
+        return ResponseEntity.ok(productService.findById(id));
+    }}
+
+    @PostMapping
+    public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto payload) {{
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(payload));
+    }}
+
+    @PutMapping("/{{id}}")
+    public ResponseEntity<ProductDto> update(@PathVariable UUID id, @Valid @RequestBody ProductDto payload) {{
+        return ResponseEntity.ok(productService.update(id, payload));
+    }}
+
+    @DeleteMapping("/{{id}}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {{
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }}
+}}
+"""
+
+    @staticmethod
+    def _product_migration_sql() -> str:
+        return """CREATE TABLE IF NOT EXISTS products (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price NUMERIC(10,2) NOT NULL,
+    stock_quantity INTEGER NOT NULL DEFAULT 0,
+    brand VARCHAR(120),
+    category VARCHAR(120),
+    image_url VARCHAR(512),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO products (id, name, description, price, stock_quantity, brand, category, image_url)
+VALUES
+    (gen_random_uuid(), 'Solid Casual Shirt', 'Breathable cotton shirt for daily wear', 1299.00, 120, 'Roadster', 'Men', 'https://picsum.photos/seed/prod1/600/800'),
+    (gen_random_uuid(), 'Printed Kurta Set', 'Elegant festive kurta with matching bottoms', 1599.00, 80, 'Libas', 'Women', 'https://picsum.photos/seed/prod2/600/800'),
+    (gen_random_uuid(), 'Running Sneakers', 'Cushioned running shoes', 2499.00, 140, 'Puma', 'Footwear', 'https://picsum.photos/seed/prod3/600/800')
+ON CONFLICT DO NOTHING;
 """
 

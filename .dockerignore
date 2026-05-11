@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+generated_projects/
+downloads/
+chroma_data/
+logs/
+.git/
+.gitignore
+.DS_Store
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo

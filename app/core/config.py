@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     celery_result_backend: str = Field(default="redis://localhost:6379/1", alias="CELERY_RESULT_BACKEND")
 
     chroma_persist_directory: str = Field(default="./chroma_data", alias="CHROMA_PERSIST_DIRECTORY")
+    chroma_telemetry: bool = Field(default=False, alias="CHROMA_TELEMETRY")
+    anonymized_telemetry: bool = Field(default=False, alias="ANONYMIZED_TELEMETRY")
+    llm_provider: str = Field(default="anthropic", alias="LLM_PROVIDER")
+    anthropic_api_key: Optional[str] = Field(default=None, alias="ANTHROPIC_API_KEY")
+    anthropic_model: str = Field(default="claude-3-5-sonnet-20241022", alias="ANTHROPIC_MODEL")
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     embedding_model: str = Field(default="text-embedding-3-small", alias="EMBEDDING_MODEL")
@@ -49,11 +54,13 @@ class Settings(BaseSettings):
     max_rag_results: int = Field(default=8, alias="MAX_RAG_RESULTS")
     max_generation_file_size: int = Field(default=500000, alias="MAX_GENERATION_FILE_SIZE")
     max_generated_file_count: int = Field(default=600, alias="MAX_GENERATED_FILE_COUNT")
-    max_zip_size_mb: int = Field(default=50, alias="MAX_ZIP_SIZE_MB")
+    max_zip_size_mb: int = Field(default=300, alias="MAX_ZIP_SIZE_MB")
     rag_min_similarity: float = Field(default=0.0, alias="RAG_MIN_SIMILARITY")
     
-    # OpenAI / LLM settings
+    # LLM settings
+    anthropic_timeout_seconds: int = Field(default=60, alias="ANTHROPIC_TIMEOUT_SECONDS")
     openai_timeout_seconds: int = Field(default=60, alias="OPENAI_TIMEOUT_SECONDS")
+    store_final_project: bool = Field(default=True, alias="STORE_FINAL_PROJECT")
 
     downloads_dir_path: Optional[str] = Field(default=None, alias="DOWNLOADS_DIR")
 

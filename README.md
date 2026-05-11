@@ -845,3 +845,16 @@ echo "# python_foundry_dupli" >> README.md
 =======
 echo "# python_foundry" >> README.md
 >>>>>>> 54c87fc2 (upload latest code with template)
+
+
+
+run backend 
+cd "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry"
+source .venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+
+run celery
+cd "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry"
+source .venv/bin/activate
+PYTHONPATH=. celery -A app.tasks.celery_app.celery_app worker --loglevel=INFO --pool=solo -n clean_worker@%h
