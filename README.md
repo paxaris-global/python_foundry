@@ -848,13 +848,13 @@ echo "# python_foundry" >> README.md
 
 
 
-run backend 
+run backend :- 
 cd "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry"
 source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 
-run celery
+run celery :- 
 cd "/Users/m5/paxarisglobal product/python_foundry_code/python_foundry"
 source .venv/bin/activate
 PYTHONPATH=. celery -A app.tasks.celery_app.celery_app worker --loglevel=INFO --pool=solo -n clean_worker@%h
