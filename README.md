@@ -250,10 +250,10 @@ docker compose exec api alembic upgrade head
 ```
 
 This starts four containers:
-- **api** (port 8000): FastAPI application
+- **api** (host port `${PYTHON_FOUNDRY_API_HOST_PORT:-8000}`): FastAPI application
 - **worker**: Celery worker processing generation tasks
-- **postgres** (port 5432): PostgreSQL database
-- **redis** (port 6379): Redis for Celery message broker
+- **postgres** (host port `${PYTHON_FOUNDRY_POSTGRES_HOST_PORT:-15433}`): PostgreSQL database
+- **redis** (host port `${PYTHON_FOUNDRY_REDIS_HOST_PORT:-16379}`): Redis for Celery message broker
 
 ### Submit Your First Generation Request
 
@@ -300,15 +300,18 @@ All configuration is managed through environment variables (loaded from `.env`).
 | `APP_ENV` | `development` | Environment name |
 | `APP_HOST` | `0.0.0.0` | API bind host |
 | `APP_PORT` | `8000` | API bind port |
+| `PYTHON_FOUNDRY_API_HOST_PORT` | `8000` | Docker Compose host port for the API |
 | `SECRET_KEY` | `change_me` | Application secret key |
 | `POSTGRES_USER` | `ai_codegen` | Database username |
 | `POSTGRES_PASSWORD` | `ai_codegen_pass` | Database password |
 | `POSTGRES_DB` | `ai_codegen_db` | Database name |
 | `POSTGRES_HOST` | `localhost` | Database host |
 | `POSTGRES_PORT` | `5432` | Database port |
+| `PYTHON_FOUNDRY_POSTGRES_HOST_PORT` | `15433` | Docker Compose host port for PostgreSQL |
 | `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
 | `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Celery broker URL |
 | `CELERY_RESULT_BACKEND` | `redis://localhost:6379/1` | Celery result backend URL |
+| `PYTHON_FOUNDRY_REDIS_HOST_PORT` | `16379` | Docker Compose host port for Redis |
 | `OPENAI_API_KEY` | (none) | OpenAI API key. If not set, LLM calls return fallback responses |
 | `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model to use |
 | `EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model for RAG |

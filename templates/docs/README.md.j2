@@ -21,8 +21,8 @@
 1. Copy .env.example to .env if needed
 2. Build and run:
    docker compose up --build
-3. Backend: http://localhost:8080
-4. Frontend: http://localhost:4200
+3. Backend: http://localhost:${BACKEND_HOST_PORT:-18080}
+4. Frontend: http://localhost:${FRONTEND_HOST_PORT:-14200}
 
 ## Local Database Options
 - By default, the generated backend runs with PostgreSQL in Docker (profile: `postgres`).

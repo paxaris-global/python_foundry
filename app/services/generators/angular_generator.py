@@ -36,7 +36,7 @@ class AngularGenerator(BaseGenerator):
 
         ctx = {
             "project_name": app_name,
-            "api_base_url": "http://localhost:8080",
+            "api_base_url": "http://localhost:18080",
             "ui_profile": ui_profile,
             "layout_style": layout_style,
             "theme_tokens": theme_tokens,
@@ -79,7 +79,7 @@ class AngularGenerator(BaseGenerator):
             "frontend/src/app/features/customers/customers.module.ts": self._customers_module_ts(),
             "frontend/src/environments/environment.ts": self.renderer.render(
               TemplateRegistry.ANGULAR_ENVIRONMENT.path,
-              {"production": False, "api_base_url": "http://localhost:8080/api/v1"},
+              {"production": False, "api_base_url": "http://localhost:18080/api/v1"},
             ),
             "frontend/src/environments/environment.prod.ts": self.renderer.render(
               TemplateRegistry.ANGULAR_ENVIRONMENT.path,

@@ -235,7 +235,7 @@ FRONTEND                BACKEND               DATABASE
 │   Angular    │       │  Service     │      │  (5432)      │
 │   Component  │       │  Repository  │      │              │
 └──────────────┘       └──────────────┘      └──────────────┘
-   :4200                    :8080               :5432
+   :14200                   :18080              :15432
 
 HTTP GET/POST/PUT/DELETE
    ↓↑
@@ -260,13 +260,13 @@ LOCAL (Development):
   - Application profile: local
   - Database: H2 in-memory
   - DDL: create-drop (auto-recreate)
-  - Port: 8080 (backend), 4200 (frontend)
+  - Port: 18080 (backend host), 14200 (frontend host)
   
 DOCKER (Docker Compose):
   - Application profile: postgres
   - Database: PostgreSQL 17
   - DDL: validate (require pre-migration)
-  - Port: 8080 (backend), 4200 (frontend)
+  - Port: 18080 (backend host), 14200 (frontend host)
   - Env vars: DB_HOST=postgres, etc.
   
 PRODUCTION:
@@ -289,7 +289,7 @@ PRODUCTION:
 - ✅ npm install → success
 - ✅ npm build → success (TypeScript compiled)
 - ✅ npm test → passes (if test suite included)
-- ✅ App renders at localhost:4200
+- ✅ App renders at localhost:14200
 
 **Integration:**
 - ✅ docker-compose up → all services healthy
@@ -306,7 +306,7 @@ PRODUCTION:
 | Angular build fails "declared in multiple modules" | Component in 2 NgModules | See TEMPLATE_REFERENCE_GUIDE.md issue #1 |
 | npm install fails with invalid package name | `@angular/common/http` in package.json | Remove from package.json |
 | Binding doesn't work `[(ngModel)]` error | FormsModule missing | Add to feature module imports |
-| API CORS error from frontend | SecurityConfig no CORS | Verify localhost:4200 in CORS config |
+| API CORS error from frontend | SecurityConfig no CORS | Verify localhost:14200 in CORS config |
 | mvn compile fails | pom.xml syntax error or missing dependency | Check all dependencies in pom.xml |
 | Templates won't render | Missing context variables | Map all `{{ variables }}` |
 

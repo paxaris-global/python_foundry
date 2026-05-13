@@ -3,7 +3,7 @@ services:
     build: ./backend
     container_name: {{ project_name }}_backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_HOST_PORT:-18080}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: postgres
       DB_HOST: postgres
@@ -19,7 +19,7 @@ services:
     build: ./frontend
     container_name: {{ project_name }}_frontend
     ports:
-      - "4200:80"
+      - "${FRONTEND_HOST_PORT:-14200}:80"
     depends_on:
       - backend
 
@@ -31,7 +31,7 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app_password
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-15432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

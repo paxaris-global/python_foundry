@@ -130,7 +130,7 @@ def test_template_rendering():
         "entity": "Customer",
         "entity_var": "customer",
         "base_path": "/api/v1/customers",
-        "api_base_url": "http://localhost:8080",
+        "api_base_url": "http://localhost:18080",
         "rag_hints": ["Test hint 1", "Test hint 2"],
     }
     

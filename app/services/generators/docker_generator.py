@@ -10,8 +10,9 @@ class DockerGenerator(BaseGenerator):
     @staticmethod
     def _env_example() -> str:
         return """SPRING_PROFILES_ACTIVE=prod
-BACKEND_PORT=8080
-FRONTEND_PORT=4200
+BACKEND_HOST_PORT=18080
+FRONTEND_HOST_PORT=14200
+POSTGRES_HOST_PORT=15432
 POSTGRES_DB=appdb
 POSTGRES_USER=app
 POSTGRES_PASSWORD=app_password
