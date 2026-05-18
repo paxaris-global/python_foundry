@@ -87,7 +87,6 @@ class AngularGenerator(BaseGenerator):
             ),
             "frontend/nginx.conf": self._nginx_conf(),
             "frontend/Dockerfile": self.renderer.render(TemplateRegistry.ANGULAR_DOCKERFILE.path, ctx),
-            ".github/workflows/frontend-trigger.yml": self._trigger_workflow(),
         }
         if domain in {"ecommerce", "retail"}:
             files["frontend/src/app/app.module.ts"] = self._ecommerce_app_module_ts()

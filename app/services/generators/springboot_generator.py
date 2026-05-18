@@ -80,7 +80,6 @@ class SpringBootGenerator(BaseGenerator):
             "backend/.gitignore": self._gitignore(),
             f"backend/src/test/java/{package_path}/{app_class}Tests.java": self._test_java(package, app_class),
             f"backend/src/test/java/{package_path}/service/CustomerServiceImplTest.java": self._customer_service_test(package),
-            ".github/workflows/backend-trigger.yml": self._trigger_workflow(),
         }
         if ecommerce_mode:
             files.update(
@@ -150,7 +149,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ vars.DOCKERHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
