@@ -1042,6 +1042,7 @@ class GenerationOrchestrator:
             # with multiple pages, rich navigation, realistic data, and a polished UI
             # that mirrors the reference website (website_like) if provided.
             try:
+                _pre_enhancement_frontend_files = dict(frontend_files)
                 # Build a map of existing files for context
                 _existing_summary = "\n".join(
                     f"  {fp}" for fp in sorted(frontend_files.keys())
@@ -1066,7 +1067,8 @@ class GenerationOrchestrator:
                     "Choose ONE fresh visual direction for this generation and apply it consistently: "
                     "Neo Runway Glass, Cyber Luxe Dark, Editorial Gradient Commerce, Aurora Minimal Pro, Obsidian Neon Dashboard, "
                     "Soft Luxury Studio, Kinetic SaaS Cards, or create a similarly polished original variant. "
-                    "Do NOT reuse the existing simple scaffold layout. Change section order, card styling, hero composition, colors, spacing, and copy."
+                    "Use strong but balanced color: gradients, accent chips, soft glass cards, colorful CTAs, visible hover states. "
+                    "Do NOT make the website flatter, duller, emptier, or less colorful than the scaffold."
                 )
                 enhancement_prompt = (
                     f"User prompt: {prompt}\n"
@@ -1078,8 +1080,9 @@ class GenerationOrchestrator:
                     "You are a senior full-stack Angular developer. "
                     "The project currently has these files:\n"
                     f"{_existing_summary}\n\n"
-                    "Your job is to COMPLETELY REWRITE the frontend into a FULL, REALISTIC, PRODUCTION-READY website. "
-                    "Treat the existing scaffold only as a compileable starting point, not as a visual design to preserve. "
+                    "Your job is to POLISH AND EXTEND the frontend into a FULL, REALISTIC, PRODUCTION-READY website. "
+                    "Preserve working routes, services, and button behavior unless you replace them with a better compile-safe version. "
+                    "Improve visual design, color, spacing, imagery, and responsive layout without making the UI generic or plain. "
                     "Requirements:\n\n"
                     "1. MULTIPLE PAGES: Generate separate routed Angular components for every major section "
                     "   (e.g. Home, Products/Listing, Product Detail, Cart, Checkout, Auth/Login, Admin Dashboard, "
@@ -1111,6 +1114,8 @@ class GenerationOrchestrator:
                     "- Include shared navbar/footer/product-card components when applicable\n"
                     "- Include Angular services and models for each API-backed feature\n"
                     "- All clickable buttons must have real routerLink, form submit, or (click) handler behavior\n"
+                    "- Keep colorful premium styling: no plain white-only pages, no tiny hero, no unstyled forms\n"
+                    "- If you edit TypeScript, keep the change small and compile-safe\n"
                     "- Do not use console.log as final behavior\n"
                     "- Every import path must be correct and resolvable\n"
                     "- No TypeScript strict errors — initialize all properties\n"
@@ -1145,8 +1150,10 @@ class GenerationOrchestrator:
                     logger.info("Pass 3: Enhancement applied %d files", enhanced_count)
 
                     # Pass 3B — Post-enhancement build fix (up to 2 more attempts)
+                    _can_verify_enhancement = os.path.exists(os.path.join(frontend_dir, "node_modules"))
+                    _enhancement_build_succeeded = False
                     for _attempt in range(2):
-                        if not os.path.exists(os.path.join(frontend_dir, "node_modules")):
+                        if not _can_verify_enhancement:
                             break
                         try:
                             _build = subprocess.run(
@@ -1157,6 +1164,7 @@ class GenerationOrchestrator:
                             break
                         if _build.returncode == 0:
                             logger.info("Pass 3B: Build succeeded after enhancement (attempt %d)", _attempt + 1)
+                            _enhancement_build_succeeded = True
                             break
                         _err_out = _build.stderr + "\n" + _build.stdout
                         _err_lines = [l for l in _err_out.splitlines()
@@ -1200,6 +1208,22 @@ class GenerationOrchestrator:
                                         logger.info("Pass 3B fix: %s", _fp)
                         except Exception:
                             logger.warning("Pass 3B build-fix failed on attempt %d", _attempt + 1, exc_info=True)
+                    if _can_verify_enhancement and not _enhancement_build_succeeded:
+                        logger.warning("Pass 3B: Enhanced frontend did not compile; restoring pre-enhancement frontend files")
+                        _restore_paths = set(frontend_files.keys()) | set(_pre_enhancement_frontend_files.keys())
+                        for _fp in sorted(_restore_paths):
+                            if not _fp.startswith("frontend/"):
+                                continue
+                            _abs = os.path.join(str(project_root), _fp)
+                            if _fp in _pre_enhancement_frontend_files:
+                                frontend_files[_fp] = _pre_enhancement_frontend_files[_fp]
+                                os.makedirs(os.path.dirname(_abs), exist_ok=True)
+                                with open(_abs, "w") as _fh:
+                                    _fh.write(_pre_enhancement_frontend_files[_fp])
+                            else:
+                                frontend_files.pop(_fp, None)
+                                if os.path.exists(_abs):
+                                    os.remove(_abs)
                 else:
                     logger.warning("Pass 3: Enhancement returned no results, keeping existing files")
             except Exception:

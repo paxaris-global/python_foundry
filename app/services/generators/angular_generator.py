@@ -89,6 +89,9 @@ class AngularGenerator(BaseGenerator):
             "frontend/Dockerfile": self.renderer.render(TemplateRegistry.ANGULAR_DOCKERFILE.path, ctx),
         }
         if domain in {"ecommerce", "retail"}:
+            files["frontend/src/styles.css"] = (
+                files["frontend/src/styles.css"].rstrip() + "\n\n" + self._ecommerce_global_css(theme_tokens)
+            )
             files["frontend/src/app/app.module.ts"] = self._ecommerce_app_module_ts()
             files["frontend/src/app/app-routing.module.ts"] = self._ecommerce_app_routing_ts()
             files["frontend/src/app/app.component.ts"] = self._ecommerce_app_component_ts(app_title)
@@ -123,6 +126,17 @@ class AngularGenerator(BaseGenerator):
                 self._ecommerce_product_detail_component_css(theme_tokens)
             )
             files["frontend/src/app/features/catalog/catalog.module.ts"] = self._ecommerce_catalog_module_ts()
+            files["frontend/src/app/core/services/cart.service.ts"] = self._ecommerce_cart_service_ts()
+            for page in ["cart", "login", "signup", "checkout", "wishlist", "account", "admin"]:
+                files[f"frontend/src/app/features/experience/components/{page}.component.ts"] = (
+                    self._ecommerce_experience_component_ts(page)
+                )
+                files[f"frontend/src/app/features/experience/components/{page}.component.html"] = (
+                    self._ecommerce_experience_component_html(page)
+                )
+                files[f"frontend/src/app/features/experience/components/{page}.component.css"] = (
+                    self._ecommerce_experience_component_css(page)
+                )
         return files
 
     @staticmethod
@@ -578,6 +592,7 @@ export class AppComponent {{
     @staticmethod
     def _ecommerce_app_component_ts(app_name: str) -> str:
         return f"""import {{ Component }} from '@angular/core';
+import {{ CartService }} from './core/services/cart.service';
 
 @Component({{
   selector: 'app-root',
@@ -586,7 +601,7 @@ export class AppComponent {{
 }})
 export class AppComponent {{
   readonly title = '{app_name}';
-  readonly promo = 'Flat 25% OFF | Free shipping over $49';
+  readonly promo = 'Color Rush Sale | Futuristic fashion edits live now | Free shipping over $49';
   readonly topCategories = ['MEN', 'WOMEN', 'KIDS', 'BEAUTY', 'HOME', 'ACCESSORIES'];
   readonly megaMenu: Record<string, string[]> = {{
     MEN: ['T-Shirts', 'Shirts', 'Jeans', 'Footwear', 'Watches', 'Sportswear'],
@@ -597,6 +612,13 @@ export class AppComponent {{
     ACCESSORIES: ['Watches', 'Belts', 'Wallets', 'Sunglasses', 'Bags'],
   }};
   activeMegaMenu: string | null = null;
+  cartCount = 0;
+
+  constructor(private cartService: CartService) {{
+    this.cartService.items$.subscribe(items => {{
+      this.cartCount = items.reduce((total, item) => total + item.quantity, 0);
+    }});
+  }}
 
   openMegaMenu(category: string): void {{
     this.activeMegaMenu = category;
@@ -612,15 +634,17 @@ export class AppComponent {{
     def _ecommerce_app_component_html(app_name: str) -> str:
         return f"""<div class=\"promo-strip\">{{{{ promo }}}}</div>
 <header class=\"main-nav\">
-  <div class=\"brand\">{app_name}</div>
+  <a class=\"brand\" [routerLink]=\"['/']\">{app_name}<span>Studio</span></a>
   <nav class=\"category-nav\" (mouseleave)=\"closeMegaMenu()\">
     <a *ngFor=\"let cat of topCategories\" href=\"#\" (mouseenter)=\"openMegaMenu(cat)\">{{{{ cat }}}}</a>
   </nav>
   <div class=\"actions\">
     <input class=\"search\" placeholder=\"Search for products, brands and more\" />
-    <button class=\"icon-btn\" aria-label=\"Profile\">👤</button>
-    <button class=\"icon-btn\" aria-label=\"Wishlist\">♡</button>
-    <button class=\"icon-btn\" aria-label=\"Cart\">🛍</button>
+    <a class=\"nav-link\" [routerLink]=\"['/login']\">Login</a>
+    <a class=\"nav-link signup\" [routerLink]=\"['/signup']\">Signup</a>
+    <a class=\"icon-btn\" [routerLink]=\"['/account']\" aria-label=\"Profile\">👤</a>
+    <a class=\"icon-btn\" [routerLink]=\"['/wishlist']\" aria-label=\"Wishlist\">♡</a>
+    <a class=\"icon-btn cart-button\" [routerLink]=\"['/cart']\" aria-label=\"Cart\">🛍<span>{{{{ cartCount }}}}</span></a>
   </div>
 </header>
 <section class=\"mega-menu\" *ngIf=\"activeMegaMenu\" (mouseleave)=\"closeMegaMenu()\">
@@ -634,6 +658,9 @@ export class AppComponent {{
   <section class=\"quick-links\">
     <a [routerLink]=\"['/']\">Home</a>
     <a [routerLink]=\"['/products']\">Products</a>
+    <a [routerLink]=\"['/cart']\">Cart</a>
+    <a [routerLink]=\"['/checkout']\">Checkout</a>
+    <a [routerLink]=\"['/admin']\">Admin</a>
   </section>
   <router-outlet></router-outlet>
 </main>
@@ -653,7 +680,10 @@ export class AppComponent {{
   --text: {text};
   --muted: {muted};
   display: block;
-  background: #f7f8fa;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255,63,108,.22), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(124,58,237,.18), transparent 30%),
+    linear-gradient(135deg, #fff7fb 0%, #eef5ff 45%, #fffaf0 100%);
   color: var(--text);
   min-height: 100vh;
   font-family: Inter, sans-serif;
@@ -674,11 +704,26 @@ export class AppComponent {{
   grid-template-columns: 160px 1fr auto;
   gap: 16px;
   align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #eceff3;
+  background: rgba(255,255,255,.82);
+  border-bottom: 1px solid rgba(255,255,255,.62);
   padding: 14px 20px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 45px rgba(15,23,42,.08);
 }}
-.brand {{ font-size: 1.35rem; font-weight: 800; letter-spacing: 0.4px; }}
+.brand {{
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}}
+.brand span {{
+  margin-left: 4px;
+  background: linear-gradient(90deg, var(--brand-primary), #7c3aed, var(--brand-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}}
 .category-nav {{
   display: flex;
   gap: 14px;
@@ -708,6 +753,43 @@ export class AppComponent {{
   width: 36px;
   height: 36px;
   cursor: pointer;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}}
+.nav-link {{
+  color: var(--text);
+  font-size: .86rem;
+  font-weight: 800;
+  text-decoration: none;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(216,222,232,.8);
+}}
+.nav-link.signup {{
+  color: #fff;
+  border: 0;
+  background: linear-gradient(135deg, var(--brand-primary), #7c3aed);
+  box-shadow: 0 12px 24px rgba(255,63,108,.22);
+}}
+.cart-button span {{
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 900;
 }}
 .mega-menu {{
   position: sticky;
@@ -1021,6 +1103,17 @@ export class HomeComponent {{
     @staticmethod
     def _ecommerce_product_list_component_ts() -> str:
         return """import { Component } from '@angular/core';
+import { CartService } from '../../../core/services/cart.service';
+
+interface ProductCard {
+  id: number;
+  name: string;
+  brand: string;
+  price: number;
+  mrp: number;
+  rating: number;
+  img: string;
+}
 
 @Component({
   selector: 'app-product-list',
@@ -1035,7 +1128,7 @@ export class ProductListComponent {
     brands: ['Roadster', 'H&M', 'Puma', 'Levis', 'Libas', 'Fossil'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
   };
-  readonly products = [
+  readonly products: ProductCard[] = [
     { id: 1, name: 'Solid Casual Shirt', brand: 'Roadster', price: 1299, mrp: 2599, rating: 4.3, img: 'https://picsum.photos/seed/prod1/400/520' },
     { id: 2, name: 'Slim Fit Jeans', brand: 'Levis', price: 1899, mrp: 2999, rating: 4.2, img: 'https://picsum.photos/seed/prod2/400/520' },
     { id: 3, name: 'Running Sneakers', brand: 'Puma', price: 2499, mrp: 3999, rating: 4.5, img: 'https://picsum.photos/seed/prod3/400/520' },
@@ -1044,8 +1137,14 @@ export class ProductListComponent {
     { id: 6, name: 'Backpack 24L', brand: 'Wildcraft', price: 1199, mrp: 2199, rating: 4.1, img: 'https://picsum.photos/seed/prod6/400/520' }
   ];
 
+  constructor(private cartService: CartService) {}
+
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+  }
+
+  addToCart(product: ProductCard): void {
+    this.cartService.add(product);
   }
 }
 """
@@ -1097,7 +1196,7 @@ export class ProductListComponent {
           <span class=\"mrp\">${{ p.mrp }}</span>
           <span class=\"rating\">★ {{ p.rating }}</span>
         </div>
-        <button>Add to Cart</button>
+        <button (click)="addToCart(p)">Add to Cart</button>
       </article>
     </div>
   </section>
@@ -1490,17 +1589,449 @@ export class HomeModule {}
 """
 
     @staticmethod
+    def _ecommerce_cart_service_ts() -> str:
+        return """import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+export interface CartProduct {
+  id: number;
+  name: string;
+  brand: string;
+  price: number;
+  mrp: number;
+  rating: number;
+  img: string;
+}
+
+export interface CartItem {
+  product: CartProduct;
+  quantity: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CartService {
+  private readonly storageKey = 'pf-cart-items';
+  private readonly itemsSubject = new BehaviorSubject<CartItem[]>(this.loadItems());
+  readonly items$ = this.itemsSubject.asObservable();
+
+  get items(): CartItem[] {
+    return this.itemsSubject.value;
+  }
+
+  add(product: CartProduct): void {
+    const items = [...this.items];
+    const existing = items.find(item => item.product.id === product.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      items.push({ product, quantity: 1 });
+    }
+    this.save(items);
+  }
+
+  increase(productId: number): void {
+    this.save(this.items.map(item => item.product.id === productId ? { ...item, quantity: item.quantity + 1 } : item));
+  }
+
+  decrease(productId: number): void {
+    this.save(
+      this.items
+        .map(item => item.product.id === productId ? { ...item, quantity: item.quantity - 1 } : item)
+        .filter(item => item.quantity > 0)
+    );
+  }
+
+  remove(productId: number): void {
+    this.save(this.items.filter(item => item.product.id !== productId));
+  }
+
+  clear(): void {
+    this.save([]);
+  }
+
+  private save(items: CartItem[]): void {
+    this.itemsSubject.next(items);
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(items));
+    } catch {
+      // Keep the in-memory cart working if localStorage is blocked.
+    }
+  }
+
+  private loadItems(): CartItem[] {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      return raw ? JSON.parse(raw) as CartItem[] : [];
+    } catch {
+      return [];
+    }
+  }
+}
+"""
+
+    @staticmethod
+    def _ecommerce_experience_component_ts(page: str) -> str:
+        class_name = "".join(part.capitalize() for part in page.split("-")) + "Component"
+        if page == "cart":
+            return f"""import {{ Component }} from '@angular/core';
+import {{ CartItem, CartService }} from '../../../core/services/cart.service';
+
+@Component({{
+  selector: 'app-{page}',
+  templateUrl: './{page}.component.html',
+  styleUrls: ['./{page}.component.css']
+}})
+export class {class_name} {{
+  items: CartItem[] = [];
+
+  constructor(private cartService: CartService) {{
+    this.cartService.items$.subscribe(items => {{
+      this.items = items;
+    }});
+  }}
+
+  get subtotal(): number {{
+    return this.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  }}
+
+  get grandTotal(): number {{
+    return this.subtotal > 0 ? this.subtotal + 49 : 0;
+  }}
+
+  increase(productId: number): void {{
+    this.cartService.increase(productId);
+  }}
+
+  decrease(productId: number): void {{
+    this.cartService.decrease(productId);
+  }}
+
+  remove(productId: number): void {{
+    this.cartService.remove(productId);
+  }}
+}}
+"""
+        return f"""import {{ Component }} from '@angular/core';
+
+@Component({{
+  selector: 'app-{page}',
+  templateUrl: './{page}.component.html',
+  styleUrls: ['./{page}.component.css']
+}})
+export class {class_name} {{
+  readonly title = '{page.replace("-", " ").title()}';
+  readonly highlights = ['Premium UX', 'Color-rich design', 'Connected flow'];
+}}
+"""
+
+    @staticmethod
+    def _ecommerce_experience_component_html(page: str) -> str:
+        if page == "cart":
+            return """<section class="experience-shell">
+  <div class="experience-hero">
+    <p>SHOPPING BAG</p>
+    <h1>Your selected styles</h1>
+    <span>{{ items.length }} item groups ready for checkout</span>
+  </div>
+
+  <div class="cart-grid" *ngIf="items.length; else emptyCart">
+    <div>
+      <article class="cart-item" *ngFor="let item of items">
+        <img [src]="item.product.img" [alt]="item.product.name" />
+        <div>
+          <h3>{{ item.product.brand }}</h3>
+          <p>{{ item.product.name }}</p>
+          <strong>${{ item.product.price }}</strong>
+        </div>
+        <div class="quantity">
+          <button (click)="decrease(item.product.id)">-</button>
+          <span>{{ item.quantity }}</span>
+          <button (click)="increase(item.product.id)">+</button>
+        </div>
+        <button class="ghost" (click)="remove(item.product.id)">Remove</button>
+      </article>
+    </div>
+
+    <aside class="summary-card">
+      <h2>Price Details</h2>
+      <p><span>Subtotal</span><strong>${{ subtotal }}</strong></p>
+      <p><span>Shipping</span><strong>$49</strong></p>
+      <p class="total"><span>Total</span><strong>${{ grandTotal }}</strong></p>
+      <a class="primary-action" [routerLink]="['/checkout']">Proceed to Checkout</a>
+    </aside>
+  </div>
+
+  <ng-template #emptyCart>
+    <div class="empty-state">
+      <h2>Your cart is waiting for color.</h2>
+      <p>Add products from the catalog to see totals and checkout actions here.</p>
+      <a class="primary-action" [routerLink]="['/products']">Shop Products</a>
+    </div>
+  </ng-template>
+</section>
+"""
+        page_copy = {
+            "login": ("Welcome back", "Sign in to sync wishlist, cart, orders, and premium member offers.", "Login"),
+            "signup": ("Create your style account", "Join the studio for faster checkout, saved looks, and order tracking.", "Create Account"),
+            "checkout": ("Checkout", "Confirm delivery, payment mode, and place your order.", "Place Order"),
+            "wishlist": ("Wishlist", "Save bold looks and move favorites into your cart anytime.", "Move Favorites"),
+            "account": ("Account", "Manage profile, addresses, orders, and style preferences.", "Update Profile"),
+            "admin": ("Admin Studio", "Track orders, revenue, inventory, and product launches.", "Save Dashboard"),
+        }
+        title, subtitle, action = page_copy.get(page, ("Experience", "Premium generated page.", "Continue"))
+        return f"""<section class="experience-shell">
+  <div class="experience-hero">
+    <p>{page.upper()}</p>
+    <h1>{title}</h1>
+    <span>{subtitle}</span>
+  </div>
+
+  <div class="experience-card">
+    <div class="form-grid">
+      <label>
+        <span>Email</span>
+        <input placeholder="you@example.com" />
+      </label>
+      <label>
+        <span>Name / Reference</span>
+        <input placeholder="Enter details" />
+      </label>
+      <label class="wide">
+        <span>Notes</span>
+        <textarea placeholder="Add delivery, account, or admin details"></textarea>
+      </label>
+    </div>
+    <div class="highlight-row">
+      <span *ngFor="let item of highlights">{{{{ item }}}}</span>
+    </div>
+    <button class="primary-action">{action}</button>
+  </div>
+</section>
+"""
+
+    @staticmethod
+    def _ecommerce_experience_component_css(_page: str) -> str:
+        return """:host {
+  display: block;
+}
+.experience-shell {
+  display: grid;
+  gap: 18px;
+}
+.experience-hero,
+.experience-card,
+.summary-card,
+.empty-state,
+.cart-item {
+  border: 1px solid rgba(255,255,255,.68);
+  background: rgba(255,255,255,.78);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(15,23,42,.10);
+  backdrop-filter: blur(18px);
+}
+.experience-hero {
+  min-height: 220px;
+  padding: 34px;
+  color: #fff;
+  display: grid;
+  align-content: end;
+  background:
+    linear-gradient(135deg, rgba(17,24,39,.88), rgba(124,58,237,.66), rgba(255,63,108,.64)),
+    url('https://picsum.photos/seed/experience-hero/1400/600') center/cover;
+}
+.experience-hero p,
+.experience-hero h1,
+.experience-hero span {
+  margin: 0;
+}
+.experience-hero h1 {
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  line-height: .95;
+}
+.experience-card,
+.empty-state,
+.summary-card {
+  padding: 24px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+input,
+textarea {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 13px 14px;
+  font: inherit;
+  background: rgba(255,255,255,.92);
+}
+textarea {
+  min-height: 110px;
+}
+.highlight-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+.highlight-row span {
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #7c2d12;
+  background: linear-gradient(135deg, #ffedd5, #fce7f3);
+  font-weight: 900;
+}
+.primary-action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 20px;
+  color: #fff;
+  font-weight: 900;
+  text-decoration: none;
+  background: linear-gradient(135deg, #ff3f6c, #7c3aed, #06b6d4);
+  box-shadow: 0 18px 38px rgba(124,58,237,.22);
+}
+.cart-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+.cart-item {
+  display: grid;
+  grid-template-columns: 92px 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.cart-item img {
+  width: 92px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.cart-item h3,
+.cart-item p {
+  margin: 0 0 5px;
+}
+.quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px;
+}
+.quantity button,
+.ghost {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.quantity button {
+  color: #fff;
+  background: #111827;
+}
+.ghost {
+  background: #fff1f2;
+  color: #be123c;
+}
+.summary-card {
+  height: fit-content;
+}
+.summary-card p {
+  display: flex;
+  justify-content: space-between;
+}
+.summary-card .total {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+  font-size: 1.2rem;
+}
+@media (max-width: 900px) {
+  .cart-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .cart-item {
+    grid-template-columns: 80px 1fr;
+  }
+}
+"""
+
+    @staticmethod
+    def _ecommerce_global_css(theme_tokens: dict) -> str:
+        primary = theme_tokens.get("primary", "#ff3f6c")
+        accent = theme_tokens.get("accent", "#7c3aed")
+        return f"""/* Premium ecommerce visual floor: keeps generated sites colorful even if LLM polish is conservative. */
+:root {{
+  --pf-commerce-primary: {primary};
+  --pf-commerce-accent: {accent};
+  --pf-commerce-cyan: #06b6d4;
+  --pf-commerce-ink: #111827;
+  --pf-commerce-card: rgba(255,255,255,.82);
+}}
+body {{
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--pf-commerce-primary) 22%, transparent), transparent 28rem),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--pf-commerce-cyan) 22%, transparent), transparent 28rem),
+    linear-gradient(135deg, #fff7fb 0%, #eef5ff 48%, #fffaf0 100%);
+}}
+button,
+a {{
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}}
+button:hover,
+a:hover {{
+  transform: translateY(-1px);
+}}
+img {{
+  max-width: 100%;
+}}
+"""
+
+    @staticmethod
     def _ecommerce_app_routing_ts() -> str:
         return """import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './features/home/components/home.component';
 import { ProductListComponent } from './features/catalog/components/product-list.component';
 import { ProductDetailComponent } from './features/catalog/components/product-detail.component';
+import { CartComponent } from './features/experience/components/cart.component';
+import { LoginComponent } from './features/experience/components/login.component';
+import { SignupComponent } from './features/experience/components/signup.component';
+import { CheckoutComponent } from './features/experience/components/checkout.component';
+import { WishlistComponent } from './features/experience/components/wishlist.component';
+import { AccountComponent } from './features/experience/components/account.component';
+import { AdminComponent } from './features/experience/components/admin.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'products', component: ProductListComponent },
   { path: 'product/:id', component: ProductDetailComponent },
+  { path: 'cart', component: CartComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'checkout', component: CheckoutComponent },
+  { path: 'wishlist', component: WishlistComponent },
+  { path: 'account', component: AccountComponent },
+  { path: 'admin', component: AdminComponent },
   { path: '**', redirectTo: '' }
 ];
 
@@ -1523,9 +2054,25 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeModule } from './features/home/home.module';
 import { CatalogModule } from './features/catalog/catalog.module';
+import { CartComponent } from './features/experience/components/cart.component';
+import { LoginComponent } from './features/experience/components/login.component';
+import { SignupComponent } from './features/experience/components/signup.component';
+import { CheckoutComponent } from './features/experience/components/checkout.component';
+import { WishlistComponent } from './features/experience/components/wishlist.component';
+import { AccountComponent } from './features/experience/components/account.component';
+import { AdminComponent } from './features/experience/components/admin.component';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [
+    AppComponent,
+    CartComponent,
+    LoginComponent,
+    SignupComponent,
+    CheckoutComponent,
+    WishlistComponent,
+    AccountComponent,
+    AdminComponent
+  ],
   imports: [
     BrowserModule,
     HttpClientModule,
