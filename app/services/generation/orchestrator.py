@@ -1052,15 +1052,34 @@ class GenerationOrchestrator:
                     else "No reference website — create a professional, production-quality site."
                 )
 
+                domain_blueprint = (
+                    "ECOMMERCE BLUEPRINT: include a clickable navbar with login/signup/profile/wishlist/cart badge; "
+                    "home, product listing, product detail, cart, checkout, login, signup, wishlist, account, and admin pages; "
+                    "wire Add to Cart, Buy Now, Wishlist, Login, Signup, Place Order, quantity +/-, remove, and admin save buttons to Angular services; "
+                    "services must call /api/v1 auth/cart/wishlist/orders/products/admin endpoints; cart page must show selected products and totals."
+                    if domain in {"ecommerce", "retail"}
+                    else
+                    "GENERAL BLUEPRINT: infer the domain and generate all pages, services, models, routes, forms, dashboards, and buttons required by the prompt. "
+                    "Every button must either navigate, submit a form, or call an Angular service connected to the API contract."
+                )
+                design_variants = (
+                    "Choose ONE fresh visual direction for this generation and apply it consistently: "
+                    "Neo Runway Glass, Cyber Luxe Dark, Editorial Gradient Commerce, Aurora Minimal Pro, Obsidian Neon Dashboard, "
+                    "Soft Luxury Studio, Kinetic SaaS Cards, or create a similarly polished original variant. "
+                    "Do NOT reuse the existing simple scaffold layout. Change section order, card styling, hero composition, colors, spacing, and copy."
+                )
                 enhancement_prompt = (
                     f"User prompt: {prompt}\n"
                     f"Domain: {domain}\n"
                     f"Features: {features_str}\n"
                     f"{_website_context}\n\n"
+                    f"{domain_blueprint}\n\n"
+                    f"{design_variants}\n\n"
                     "You are a senior full-stack Angular developer. "
                     "The project currently has these files:\n"
                     f"{_existing_summary}\n\n"
-                    "Your job is to COMPLETELY ENHANCE this project into a FULL, REALISTIC, PRODUCTION-READY website. "
+                    "Your job is to COMPLETELY REWRITE the frontend into a FULL, REALISTIC, PRODUCTION-READY website. "
+                    "Treat the existing scaffold only as a compileable starting point, not as a visual design to preserve. "
                     "Requirements:\n\n"
                     "1. MULTIPLE PAGES: Generate separate routed Angular components for every major section "
                     "   (e.g. Home, Products/Listing, Product Detail, Cart, Checkout, Auth/Login, Admin Dashboard, "
@@ -1088,20 +1107,24 @@ class GenerationOrchestrator:
                     "CRITICAL RULES:\n"
                     "- Return a single JSON object: {\"filepath\": \"complete file content\"}\n"
                     "- Include ALL files: every .ts, .html, and .css for every component\n"
+                    "- Include app.module.ts and app-routing.module.ts if you add routes/components\n"
+                    "- Include shared navbar/footer/product-card components when applicable\n"
+                    "- Include Angular services and models for each API-backed feature\n"
+                    "- All clickable buttons must have real routerLink, form submit, or (click) handler behavior\n"
+                    "- Do not use console.log as final behavior\n"
                     "- Every import path must be correct and resolvable\n"
                     "- No TypeScript strict errors — initialize all properties\n"
                     "- Return valid JSON only, no markdown fences or explanations\n"
-                    "- Generate at minimum 8-12 components, 2-3 services, 3-5 models"
+                    "- Generate at minimum 8-12 components, 3-5 services, 4-8 models\n"
+                    "- Frontend must compile with ng build"
                 )
 
                 logger.info("Pass 3: Starting full-site enhancement LLM pass")
                 if not _build_succeeded:
-                    logger.warning("Pass 3: Skipping LLM enhancement call — build has unresolved errors")
-                    enhancement_result = {}
-                else:
-                    enhancement_result = llm.generate_structured_json(
-                        prompt=enhancement_prompt, max_tokens=16000
-                    )
+                    logger.warning("Pass 3: Running enhancement despite unresolved scaffold build errors")
+                enhancement_result = llm.generate_structured_json(
+                    prompt=enhancement_prompt, max_tokens=24000
+                )
 
                 if isinstance(enhancement_result, dict) and enhancement_result:
                     enhanced_count = 0
