@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     anthropic_timeout_seconds: int = Field(default=60, alias="ANTHROPIC_TIMEOUT_SECONDS")
     openai_timeout_seconds: int = Field(default=60, alias="OPENAI_TIMEOUT_SECONDS")
     store_final_project: bool = Field(default=True, alias="STORE_FINAL_PROJECT")
+    enable_generation_cache: bool = Field(default=True, alias="ENABLE_GENERATION_CACHE")
+    enable_project_reuse: bool = Field(default=True, alias="ENABLE_PROJECT_REUSE")
+    enable_rag_retrieval: bool = Field(default=True, alias="ENABLE_RAG_RETRIEVAL")
+    enable_post_generation_rag_indexing: bool = Field(default=True, alias="ENABLE_POST_GENERATION_RAG_INDEXING")
+    auto_copy_downloads: bool = Field(default=True, alias="AUTO_COPY_DOWNLOADS")
 
     downloads_dir_path: Optional[str] = Field(default=None, alias="DOWNLOADS_DIR")
 

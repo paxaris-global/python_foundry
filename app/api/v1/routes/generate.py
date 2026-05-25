@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urlunparse
 from fastapi import APIRouter, status
 
 from app.api.deps import DBSession
+from app.core.config import get_settings
 from app.core.exceptions import ServiceUnavailableException
 from app.core.security import sanitize_project_name
 from app.models.generation_cache import GenerationCache
@@ -94,6 +95,7 @@ def _discover_website_like(project_name: str) -> Optional[str]:
     },
 )
 def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateResponse:
+    settings = get_settings()
     safe_name = sanitize_project_name(payload.project_name)
     safe_features = sanitize_feature_list(payload.features)
     effective_prompt = _build_effective_prompt(safe_name, payload.prompt, safe_features)
@@ -112,8 +114,10 @@ def create_generation_job(payload: GenerateRequest, db: DBSession) -> GenerateRe
     )
     trace_id = new_trace_id()
 
-    cached = db.query(GenerationCache).filter(GenerationCache.fingerprint == fingerprint).first()
-    if cached and cached.project_id and payload.mode_preference != "generate":
+    cached = None
+    if settings.enable_generation_cache and payload.mode_preference != "generate":
+        cached = db.query(GenerationCache).filter(GenerationCache.fingerprint == fingerprint).first()
+    if cached and cached.project_id:
         # Verify the cached project actually has files on disk before reusing
         cached_project = db.query(Project).filter(Project.id == cached.project_id).first()
         if cached_project:

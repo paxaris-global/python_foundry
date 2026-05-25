@@ -1435,6 +1435,8 @@ class GenerationOrchestrator:
         )
 
     def exact_cache_lookup(self, fingerprint: str):
+        if not self.settings.enable_generation_cache:
+            return None
         return self.cache_service.lookup(fingerprint)
 
     def parse_prompt(self, prompt: str) -> dict:
@@ -1451,12 +1453,16 @@ class GenerationOrchestrator:
         return self.feature_expander.expand(parsed_prompt, features, scaffold_profile)
 
     def discover_existing_projects(self, domain: str) -> list[Project]:
+        if not self.settings.enable_project_reuse:
+            return []
         return self.existing_search.find_candidates(domain=domain)
 
     def score_similarity(self, prompt: str, features: list[str], candidates: list[Project]) -> list[dict]:
         return self.base_selector.score_candidates(prompt, features, candidates)
 
     def select_execution_mode(self, mode_preference: str, scored_candidates: list[dict]) -> dict:
+        if not self.settings.enable_project_reuse:
+            return {"mode": "generate", "selected": None, "score": 0.0, "candidates": []}
         return self.base_selector.determine_mode(scored_candidates=scored_candidates, mode_preference=mode_preference)
 
     def resolve_scaffold_strategy(self, domain: str, execution: dict) -> dict:
@@ -1490,6 +1496,8 @@ class GenerationOrchestrator:
         expanded_features: list[str],
         selected_base: Optional[Project],
     ) -> list[dict]:
+        if not self.settings.enable_rag_retrieval:
+            return []
         query_parts = [prompt, domain, " ".join(expanded_features)]
         if selected_base:
             query_parts.append(selected_base.description or "")
@@ -1823,6 +1831,8 @@ class GenerationOrchestrator:
         domain: str,
         execution: dict,
     ) -> dict:
+        if not self.settings.enable_generation_cache:
+            return {"stored": False, "disabled": True, "fingerprint": request_fingerprint}
         cache = self.cache_service.store(
             fingerprint=request_fingerprint,
             project=project,
@@ -1841,6 +1851,8 @@ class GenerationOrchestrator:
         return {"stored": True, "cache_id": str(cache.id), "fingerprint": request_fingerprint}
 
     def index_generated_project_into_rag(self, project_path: str, domain: str, expanded_features: list[str]) -> dict:
+        if not self.settings.enable_post_generation_rag_indexing:
+            return {"attempted": False, "disabled": True, "indexed_files": 0, "indexed_chunks": 0}
         try:
             result = self.post_generation_indexer.index_generated_project(project_path, domain, expanded_features)
             return {"attempted": True, **result}

@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy.exc import OperationalError
 
 from app.core.logging import get_logger
+from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models.job import Job, JobStatus
 from app.services.generation.orchestrator import GenerationOrchestrator
@@ -95,15 +96,16 @@ def generate_project_task(self: Task, job_id: str) -> dict:
         db.commit()
         logger.info("[celery] job=%s completed successfully", job_id)
 
-        try:
-            zip_path = result.get("zip_path")
-            if zip_path:
-                download_path = copy_project_to_downloads(zip_path, job.project_name)
-                logger.info("Project auto-downloaded to: %s", download_path)
-                job.result_data = {**job.result_data, "download_path": download_path}
-                db.commit()
-        except Exception:
-            logger.warning("[celery] Failed to auto-download project for job=%s", job_id, exc_info=True)
+        if get_settings().auto_copy_downloads:
+            try:
+                zip_path = result.get("zip_path")
+                if zip_path:
+                    download_path = copy_project_to_downloads(zip_path, job.project_name)
+                    logger.info("Project auto-downloaded to: %s", download_path)
+                    job.result_data = {**job.result_data, "download_path": download_path}
+                    db.commit()
+            except Exception:
+                logger.warning("[celery] Failed to auto-download project for job=%s", job_id, exc_info=True)
 
         return result
 
