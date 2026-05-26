@@ -1232,6 +1232,154 @@ class GenerationOrchestrator:
             # END PASS 3
             # ══════════════════════════════════════════════════════════════════════
 
+            # ══════════════════════════════════════════════════════════════════════
+            # PASS 4 — Futuristic Design Polish: visual-only final LLM pass
+            # ══════════════════════════════════════════════════════════════════════
+            # This pass intentionally runs after the functional enhancement pass and
+            # only changes templates/styles. It gives prompts such as "Neo Runway
+            # Commerce 2026" a final futuristic visual treatment without risking
+            # services, routes, guards, or API wiring.
+            try:
+                _design_signal = " ".join(
+                    [
+                        str(prompt or ""),
+                        str(features_str or ""),
+                        str(website_like or ""),
+                        str(domain or ""),
+                    ]
+                ).lower()
+                _wants_futuristic_design = any(
+                    term in _design_signal
+                    for term in (
+                        "futuristic",
+                        "neo runway",
+                        "premium-ui",
+                        "premium ui",
+                        "glassmorphism",
+                        "neon",
+                        "advanced premium",
+                        "original-design",
+                        "original design",
+                    )
+                )
+                if _wants_futuristic_design:
+                    _pre_design_frontend_files = dict(frontend_files)
+                    _design_files = {
+                        fp: fc
+                        for fp, fc in frontend_files.items()
+                        if fp.startswith("frontend/")
+                        and fp.endswith((".html", ".css", ".scss"))
+                        and any(
+                            section in fp
+                            for section in (
+                                "src/styles.",
+                                "app.component.",
+                                "/home/",
+                                "/catalog/",
+                                "/cart",
+                                "/checkout",
+                                "/wishlist",
+                                "/account",
+                                "/admin",
+                                "/login",
+                                "/signup",
+                                "/experience/",
+                                "/shared/",
+                            )
+                        )
+                    }
+                    _design_context = "\n\n".join(
+                        f"=== {fp} ===\n{str(fc)[:3000]}" for fp, fc in sorted(_design_files.items())
+                    )
+                    _design_prompt = (
+                        f"User prompt: {prompt}\n"
+                        f"Domain: {domain}\n"
+                        f"Features: {features_str}\n"
+                        f"Reference website inspiration: {website_like or 'none'}\n\n"
+                        "Run the FINAL FUTURISTIC DESIGN POLISH for the generated Angular frontend.\n"
+                        "Target visual concept: Neo Runway Commerce 2026.\n"
+                        "Your job is visual design only: improve HTML class structure and CSS/SCSS styling while preserving all Angular behavior.\n\n"
+                        "Design requirements:\n"
+                        "- Make the UI clearly futuristic, premium, colorful, and professional.\n"
+                        "- Use glassmorphism, dark gradient hero/header areas, neon accent borders, layered radial gradients, hover lift animations, and polished 16px+ cards.\n"
+                        "- Keep navbar sticky and clickable: navbar z-index 1000, dropdown z-index 1100, decorative overlays pointer-events: none.\n"
+                        "- Keep Login, Signup, Wishlist, Cart badge, Product cards, Add to Cart, Checkout, and Admin visually obvious.\n"
+                        "- Do not create plain white CRUD pages or dull gray dashboards.\n"
+                        "- Make mobile responsive layouts better, not worse.\n\n"
+                        "Safety rules:\n"
+                        "- Return JSON only: {\"filepath\": \"complete file content\"}.\n"
+                        "- Only return existing .html, .css, or .scss files from the provided file list.\n"
+                        "- Do NOT return or modify TypeScript files.\n"
+                        "- Do NOT remove routerLink, form submit handlers, (click) handlers, bindings, *ngFor, *ngIf, async pipes, or cart badge bindings.\n"
+                        "- Decorative pseudo-elements and overlays must use pointer-events: none.\n"
+                        "- If you cannot improve safely, return an empty JSON object.\n"
+                        "- Never return fallback/provider error JSON such as {\"fallback\": true}.\n\n"
+                        f"Files available for visual polish:\n{_design_context}"
+                    )
+                    logger.info("Pass 4: Starting futuristic design polish LLM pass")
+                    _design_result = llm.generate_structured_json(prompt=_design_prompt, max_tokens=18000)
+                    _polished_count = 0
+                    if isinstance(_design_result, dict):
+                        for _fp, _fc in _design_result.items():
+                            if not _fp or not _fc or not str(_fc).strip():
+                                continue
+                            _fp = _fp.lstrip("/")
+                            if not _fp.startswith("frontend/"):
+                                _fp = "frontend/" + _fp
+                            if _fp not in _design_files or not _fp.endswith((".html", ".css", ".scss")):
+                                logger.warning("Pass 4: Ignoring non-design or unknown file from LLM: %s", _fp)
+                                continue
+                            _content = str(_fc)
+                            _content_lower = _content.lower()
+                            if '"fallback": true' in _content_lower or "provider error" in _content_lower:
+                                logger.warning("Pass 4: Ignoring provider fallback/error JSON for %s", _fp)
+                                continue
+                            frontend_files[_fp] = _content
+                            _abs = os.path.join(str(project_root), _fp)
+                            os.makedirs(os.path.dirname(_abs), exist_ok=True)
+                            with open(_abs, "w") as _fh:
+                                _fh.write(_content)
+                            _polished_count += 1
+                    logger.info("Pass 4: Futuristic design polish applied %d files", _polished_count)
+
+                    _can_verify_design = _polished_count > 0 and os.path.exists(os.path.join(frontend_dir, "node_modules"))
+                    if _can_verify_design:
+                        try:
+                            _design_build = subprocess.run(
+                                ["npx", "ng", "build", "--configuration=development", "--no-progress"],
+                                cwd=frontend_dir,
+                                capture_output=True,
+                                text=True,
+                                timeout=300,
+                            )
+                        except Exception:
+                            _design_build = None
+                        if _design_build is None or _design_build.returncode != 0:
+                            logger.warning("Pass 4: Futuristic polish failed build; restoring pre-polish frontend files")
+                            _restore_paths = set(frontend_files.keys()) | set(_pre_design_frontend_files.keys())
+                            for _fp in sorted(_restore_paths):
+                                if not _fp.startswith("frontend/"):
+                                    continue
+                                _abs = os.path.join(str(project_root), _fp)
+                                if _fp in _pre_design_frontend_files:
+                                    frontend_files[_fp] = _pre_design_frontend_files[_fp]
+                                    os.makedirs(os.path.dirname(_abs), exist_ok=True)
+                                    with open(_abs, "w") as _fh:
+                                        _fh.write(_pre_design_frontend_files[_fp])
+                                else:
+                                    frontend_files.pop(_fp, None)
+                                    if os.path.exists(_abs):
+                                        os.remove(_abs)
+                        else:
+                            logger.info("Pass 4: Futuristic design polish build succeeded")
+                else:
+                    logger.info("Pass 4: Skipping futuristic design polish; prompt did not request it")
+            except Exception:
+                logger.warning("Pass 4 futuristic design polish failed, continuing with existing files", exc_info=True)
+            # ══════════════════════════════════════════════════════════════════════
+            # END PASS 4
+            # ══════════════════════════════════════════════════════════════════════
+
             docker_files = self.pipeline.execute_stage(
                 "generate_docker_files",
                 self.generate_docker_files,
