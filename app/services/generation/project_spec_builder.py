@@ -1,4 +1,26 @@
+from typing import Optional
+
+
 class ProjectSpecBuilder:
+    @staticmethod
+    def _extract_labeled_value(prompt: str, label: str) -> Optional[str]:
+        import re
+
+        pattern = rf"(?im)^\s*[-*]?\s*{re.escape(label)}\s*:\s*([^\n\r]+)"
+        match = re.search(pattern, prompt or "")
+        if not match:
+            return None
+        value = match.group(1).strip().strip("`'\"")
+        return value or None
+
+    @staticmethod
+    def _safe_repository_name(value: str) -> str:
+        import re
+
+        cleaned = re.sub(r"[^a-z0-9._-]+", "-", (value or "").strip().lower())
+        cleaned = re.sub(r"-{2,}", "-", cleaned).strip("-._")
+        return cleaned or "generated-app"
+
     @staticmethod
     def _safe_backend_description(raw_summary: str) -> str:
         # Keep OpenAPI description single-line and Java-string-safe.
@@ -71,6 +93,13 @@ class ProjectSpecBuilder:
             # the default dashboard/workspace shell.
             layout_style = "landing"
 
+        backend_repo_name = self._extract_labeled_value(
+            parsed_prompt.get("summary", ""), "Backend repo name"
+        ) or f"paxarisglobal-admin-{project_name}-backend"
+        frontend_repo_name = self._extract_labeled_value(
+            parsed_prompt.get("summary", ""), "Frontend repo name"
+        ) or f"paxarisglobal-admin-{project_name}-frontend"
+
         return {
             "project_name": project_name,
             "description": self._safe_backend_description(parsed_prompt.get("summary", "")),
@@ -88,5 +117,10 @@ class ProjectSpecBuilder:
                 "brand_tone": brand_tone,
                 "visual_keywords": parsed_prompt.get("visual_keywords", []),
                 "theme_tokens": self._theme_tokens(ui_profile),
+            },
+            "deployment": {
+                "docker_org": "devopspaxarisglobalrepo",
+                "backend_repo_name": self._safe_repository_name(backend_repo_name),
+                "frontend_repo_name": self._safe_repository_name(frontend_repo_name),
             },
         }

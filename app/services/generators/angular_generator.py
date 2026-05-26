@@ -16,6 +16,13 @@ class AngularGenerator(BaseGenerator):
         layout_style = frontend_spec.get("layout_style", "workspace")
         theme_tokens = frontend_spec.get("theme_tokens", {})
         app_title = self._title_case(app_name)
+        deployment = project_spec.get("deployment", {})
+        docker_org = deployment.get("docker_org", "devopspaxarisglobalrepo")
+        frontend_repo_name = deployment.get(
+            "frontend_repo_name",
+            f"paxarisglobal-admin-{app_name}-frontend",
+        )
+        frontend_image_repo = f"{docker_org}/{frontend_repo_name}"
 
         # Build design_hints from domain, features and ui_profile so templates never get UndefinedError
         domain = project_spec.get("domain", "")
@@ -87,6 +94,16 @@ class AngularGenerator(BaseGenerator):
             ),
             "frontend/nginx.conf": self._nginx_conf(),
             "frontend/Dockerfile": self.renderer.render(TemplateRegistry.ANGULAR_DOCKERFILE.path, ctx),
+            ".github/workflows/frontend-gitops-deploy.yml": self._trigger_workflow(
+                image_repo=frontend_image_repo,
+                app_dir="frontend",
+                title="Build Push And GitOps Update (Frontend)",
+            ),
+            "frontend/.github/workflows/gitops-deploy.yml": self._trigger_workflow(
+                image_repo=frontend_image_repo,
+                app_dir="frontend",
+                title="Build Push And GitOps Update (Frontend)",
+            ),
         }
         if domain in {"ecommerce", "retail"}:
             files["frontend/src/styles.css"] = (
@@ -287,8 +304,8 @@ Thumbs.db
 """
 
     @staticmethod
-    def _trigger_workflow() -> str:
-        return """name: Build Push And GitOps Update (Frontend)
+    def _trigger_workflow(image_repo: str, app_dir: str, title: str) -> str:
+        return f"""name: {title}
 
 on:
   push:
@@ -310,16 +327,27 @@ jobs:
       - name: Set image variables
         id: vars
         run: |
-          IMAGE_REPO="devopspaxarisglobalrepo/finaltest36-admin-backend-test-frontend"
-          IMAGE_TAG="${GITHUB_SHA}"
+          IMAGE_REPO="{image_repo}"
+          IMAGE_TAG="${{GITHUB_SHA}}"
           echo "image_repo=$IMAGE_REPO" >> "$GITHUB_OUTPUT"
           echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve build paths
+        id: paths
+        run: |
+          if [ -f "{app_dir}/Dockerfile" ]; then
+            echo "context=./{app_dir}" >> "$GITHUB_OUTPUT"
+            echo "dockerfile=./{app_dir}/Dockerfile" >> "$GITHUB_OUTPUT"
+          else
+            echo "context=." >> "$GITHUB_OUTPUT"
+            echo "dockerfile=./Dockerfile" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{{{ vars.DOCKERHUB_USERNAME }}}}
+          password: ${{{{ secrets.DOCKERHUB_TOKEN || vars.DOCKERHUB_TOKEN }}}}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -330,18 +358,27 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: ${{{{ steps.paths.outputs.context }}}}
+          file: ${{{{ steps.paths.outputs.dockerfile }}}}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ steps.vars.outputs.image_repo }}:latest
-            ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.image_tag }}
+            ${{{{ steps.vars.outputs.image_repo }}}}:latest
+            ${{{{ steps.vars.outputs.image_repo }}}}:${{{{ steps.vars.outputs.image_tag }}}}
 
       - name: Update k8 image tag
         run: |
-          sed -E -i.bak "s|^([[:space:]]*)image:[[:space:]].*|\\1image: ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.image_tag }}|" k8/deployment.yaml
-          rm -f k8/deployment.yaml.bak
+          if [ -f "k8/deployment.yaml" ]; then
+            DEPLOYMENT_FILE="k8/deployment.yaml"
+          elif [ -f "{app_dir}/k8/deployment.yaml" ]; then
+            DEPLOYMENT_FILE="{app_dir}/k8/deployment.yaml"
+          else
+            echo "Missing k8/deployment.yaml"
+            exit 1
+          fi
+          sed -E -i.bak "s|^([[:space:]]*)image:[[:space:]].*|\\1image: ${{{{ steps.vars.outputs.image_repo }}}}:${{{{ steps.vars.outputs.image_tag }}}}|" "$DEPLOYMENT_FILE"
+          rm -f "$DEPLOYMENT_FILE.bak"
+          echo "deployment_file=$DEPLOYMENT_FILE" >> "$GITHUB_ENV"
 
       - name: Commit and push manifest changes
         run: |
@@ -351,7 +388,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add k8/deployment.yaml
+          git add "$deployment_file"
           git commit -m "ci: update image tag [skip ci]"
           git push
 """
