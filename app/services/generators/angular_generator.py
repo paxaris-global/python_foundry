@@ -602,14 +602,14 @@ import {{ CartService }} from './core/services/cart.service';
 export class AppComponent {{
   readonly title = '{app_name}';
   readonly promo = 'Color Rush Sale | Futuristic fashion edits live now | Free shipping over $49';
-  readonly topCategories = ['MEN', 'WOMEN', 'KIDS', 'BEAUTY', 'HOME', 'ACCESSORIES'];
+  readonly topCategories = ['Men', 'Women', 'Kids', 'Beauty', 'Footwear', 'Deals'];
   readonly megaMenu: Record<string, string[]> = {{
-    MEN: ['T-Shirts', 'Shirts', 'Jeans', 'Footwear', 'Watches', 'Sportswear'],
-    WOMEN: ['Dresses', 'Tops', 'Kurtas', 'Heels', 'Handbags', 'Jewellery'],
-    KIDS: ['Boys Clothing', 'Girls Clothing', 'Infantwear', 'Toys', 'School'],
-    BEAUTY: ['Makeup', 'Skincare', 'Haircare', 'Fragrances', 'Grooming'],
-    HOME: ['Bedsheets', 'Decor', 'Kitchen', 'Bath', 'Storage'],
-    ACCESSORIES: ['Watches', 'Belts', 'Wallets', 'Sunglasses', 'Bags'],
+    Men: ['T-Shirts', 'Shirts', 'Jeans', 'Footwear', 'Watches', 'Sportswear'],
+    Women: ['Dresses', 'Tops', 'Kurtas', 'Heels', 'Handbags', 'Jewellery'],
+    Kids: ['Boys Clothing', 'Girls Clothing', 'Infantwear', 'Toys', 'School'],
+    Beauty: ['Makeup', 'Skincare', 'Haircare', 'Fragrances', 'Grooming'],
+    Footwear: ['Sneakers', 'Heels', 'Boots', 'Slides', 'Running'],
+    Deals: ['Flash Sale', 'Clearance', 'New Offers', 'Bundle Deals'],
   }};
   activeMegaMenu: string | null = null;
   cartCount = 0;
@@ -636,12 +636,12 @@ export class AppComponent {{
 <header class=\"main-nav\">
   <a class=\"brand\" [routerLink]=\"['/']\">{app_name}<span>Studio</span></a>
   <nav class=\"category-nav\" (mouseleave)=\"closeMegaMenu()\">
-    <a *ngFor=\"let cat of topCategories\" href=\"#\" (mouseenter)=\"openMegaMenu(cat)\">{{{{ cat }}}}</a>
+    <a *ngFor=\"let cat of topCategories\" [routerLink]=\"['/products']\" [queryParams]=\"{{ category: cat.toLowerCase() }}\" (mouseenter)=\"openMegaMenu(cat)\">{{{{ cat }}}}</a>
   </nav>
   <div class=\"actions\">
     <input class=\"search\" placeholder=\"Search for products, brands and more\" />
-    <a class=\"nav-link\" [routerLink]=\"['/login']\">Login</a>
-    <a class=\"nav-link signup\" [routerLink]=\"['/signup']\">Signup</a>
+    <a class=\"nav-link\" [routerLink]=\"['/auth/login']\">Login</a>
+    <a class=\"nav-link signup\" [routerLink]=\"['/auth/signup']\">Signup</a>
     <a class=\"icon-btn\" [routerLink]=\"['/account']\" aria-label=\"Profile\">👤</a>
     <a class=\"icon-btn\" [routerLink]=\"['/wishlist']\" aria-label=\"Wishlist\">♡</a>
     <a class=\"icon-btn cart-button\" [routerLink]=\"['/cart']\" aria-label=\"Cart\">🛍<span>{{{{ cartCount }}}}</span></a>
@@ -699,7 +699,7 @@ export class AppComponent {{
 .main-nav {{
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 1000;
   display: grid;
   grid-template-columns: 160px 1fr auto;
   gap: 16px;
@@ -794,7 +794,7 @@ export class AppComponent {{
 .mega-menu {{
   position: sticky;
   top: 68px;
-  z-index: 25;
+  z-index: 1100;
   background: #fff;
   border-bottom: 1px solid #eceff3;
   padding: 12px 20px;
@@ -1196,7 +1196,7 @@ export class ProductListComponent {
           <span class=\"mrp\">${{ p.mrp }}</span>
           <span class=\"rating\">★ {{ p.rating }}</span>
         </div>
-        <button (click)="addToCart(p)">Add to Cart</button>
+        <button (click)="addToCart(p); $event.stopPropagation()">Add to Cart</button>
       </article>
     </div>
   </section>
@@ -2026,8 +2026,8 @@ const routes: Routes = [
   { path: 'products', component: ProductListComponent },
   { path: 'product/:id', component: ProductDetailComponent },
   { path: 'cart', component: CartComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: SignupComponent },
+  { path: 'auth/login', component: LoginComponent },
+  { path: 'auth/signup', component: SignupComponent },
   { path: 'checkout', component: CheckoutComponent },
   { path: 'wishlist', component: WishlistComponent },
   { path: 'account', component: AccountComponent },

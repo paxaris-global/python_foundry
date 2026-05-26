@@ -1233,12 +1233,11 @@ class GenerationOrchestrator:
             # ══════════════════════════════════════════════════════════════════════
 
             # ══════════════════════════════════════════════════════════════════════
-            # PASS 4 — Futuristic Design Polish: visual-only final LLM pass
+            # PASS 4 — Neo Runway Futuristic Design Polish: visual-only final LLM pass
             # ══════════════════════════════════════════════════════════════════════
-            # This pass intentionally runs after the functional enhancement pass and
-            # only changes templates/styles. It gives prompts such as "Neo Runway
-            # Commerce 2026" a final futuristic visual treatment without risking
-            # services, routes, guards, or API wiring.
+            # This pass runs after the functional enhancement pass. It is intentionally
+            # limited to HTML/CSS/SCSS so the LLM can make the UI look futuristic
+            # without breaking routes, services, guards, or API wiring.
             try:
                 _design_signal = " ".join(
                     [
@@ -1248,7 +1247,7 @@ class GenerationOrchestrator:
                         str(domain or ""),
                     ]
                 ).lower()
-                _wants_futuristic_design = any(
+                _wants_futuristic_design = domain in {"ecommerce", "retail"} or any(
                     term in _design_signal
                     for term in (
                         "futuristic",
@@ -1260,6 +1259,7 @@ class GenerationOrchestrator:
                         "advanced premium",
                         "original-design",
                         "original design",
+                        "myntra",
                     )
                 )
                 if _wants_futuristic_design:
@@ -1276,6 +1276,7 @@ class GenerationOrchestrator:
                                 "app.component.",
                                 "/home/",
                                 "/catalog/",
+                                "/product",
                                 "/cart",
                                 "/checkout",
                                 "/wishlist",
@@ -1283,13 +1284,14 @@ class GenerationOrchestrator:
                                 "/admin",
                                 "/login",
                                 "/signup",
+                                "/auth/",
                                 "/experience/",
                                 "/shared/",
                             )
                         )
                     }
                     _design_context = "\n\n".join(
-                        f"=== {fp} ===\n{str(fc)[:3000]}" for fp, fc in sorted(_design_files.items())
+                        f"=== {fp} ===\n{str(fc)[:3600]}" for fp, fc in sorted(_design_files.items())
                     )
                     _design_prompt = (
                         f"User prompt: {prompt}\n"
@@ -1298,27 +1300,44 @@ class GenerationOrchestrator:
                         f"Reference website inspiration: {website_like or 'none'}\n\n"
                         "Run the FINAL FUTURISTIC DESIGN POLISH for the generated Angular frontend.\n"
                         "Target visual concept: Neo Runway Commerce 2026.\n"
-                        "Your job is visual design only: improve HTML class structure and CSS/SCSS styling while preserving all Angular behavior.\n\n"
-                        "Design requirements:\n"
-                        "- Make the UI clearly futuristic, premium, colorful, and professional.\n"
-                        "- Use glassmorphism, dark gradient hero/header areas, neon accent borders, layered radial gradients, hover lift animations, and polished 16px+ cards.\n"
-                        "- Keep navbar sticky and clickable: navbar z-index 1000, dropdown z-index 1100, decorative overlays pointer-events: none.\n"
-                        "- Keep Login, Signup, Wishlist, Cart badge, Product cards, Add to Cart, Checkout, and Admin visually obvious.\n"
-                        "- Do not create plain white CRUD pages or dull gray dashboards.\n"
-                        "- Make mobile responsive layouts better, not worse.\n\n"
-                        "Safety rules:\n"
+                        "This must look premium, colorful, futuristic, and production-ready, not like a basic CRUD template.\n\n"
+                        "Visual direction:\n"
+                        "- Build a dark runway-inspired hero/header using layered radial gradients and fashion editorial spacing.\n"
+                        "- Use glassmorphism surfaces, neon pink/violet/cyan accent borders, soft glow shadows, gradient text, and polished 16px-28px cards.\n"
+                        "- Make product cards premium: image hover swap feel, discount badge, wishlist button, rating pill, bright Add to Cart button.\n"
+                        "- Make auth/cart/checkout/admin pages visually rich with split panels, glass cards, colorful CTA buttons, and clear hierarchy.\n"
+                        "- Add responsive mobile polish: sticky navbar remains usable, grids collapse cleanly, buttons remain tappable.\n"
+                        "- Keep decorative pseudo-elements and overlays below interactive content with pointer-events: none.\n\n"
+                        "Navbar/click safety:\n"
+                        "- Navbar must be sticky and clickable with z-index: 1000.\n"
+                        "- Dropdown/mega menu must use z-index: 1100.\n"
+                        "- Hero overlays must never block navbar, category links, login, signup, wishlist, cart, or profile clicks.\n"
+                        "- Preserve routerLink, form submit handlers, (click) handlers, bindings, *ngFor, *ngIf, async pipes, and cart badge bindings.\n\n"
+                        "Strict output rules:\n"
                         "- Return JSON only: {\"filepath\": \"complete file content\"}.\n"
                         "- Only return existing .html, .css, or .scss files from the provided file list.\n"
                         "- Do NOT return or modify TypeScript files.\n"
-                        "- Do NOT remove routerLink, form submit handlers, (click) handlers, bindings, *ngFor, *ngIf, async pipes, or cart badge bindings.\n"
-                        "- Decorative pseudo-elements and overlays must use pointer-events: none.\n"
+                        "- Do NOT remove behavior attributes or Angular bindings.\n"
+                        "- Do NOT make plain white CRUD pages.\n"
+                        "- Do NOT use console.log as behavior.\n"
                         "- If you cannot improve safely, return an empty JSON object.\n"
                         "- Never return fallback/provider error JSON such as {\"fallback\": true}.\n\n"
                         f"Files available for visual polish:\n{_design_context}"
                     )
-                    logger.info("Pass 4: Starting futuristic design polish LLM pass")
-                    _design_result = llm.generate_structured_json(prompt=_design_prompt, max_tokens=18000)
+                    logger.info("Pass 4: Starting Neo Runway futuristic design polish LLM pass")
+                    _design_result = llm.generate_structured_json(prompt=_design_prompt, max_tokens=22000)
                     _polished_count = 0
+                    _visual_tokens = (
+                        "gradient",
+                        "radial-gradient",
+                        "linear-gradient",
+                        "glass",
+                        "backdrop-filter",
+                        "box-shadow",
+                        "neon",
+                        "glow",
+                        "transform",
+                    )
                     if isinstance(_design_result, dict):
                         for _fp, _fc in _design_result.items():
                             if not _fp or not _fc or not str(_fc).strip():
@@ -1334,13 +1353,18 @@ class GenerationOrchestrator:
                             if '"fallback": true' in _content_lower or "provider error" in _content_lower:
                                 logger.warning("Pass 4: Ignoring provider fallback/error JSON for %s", _fp)
                                 continue
+                            if _fp.endswith((".css", ".scss")) and not any(
+                                token in _content_lower for token in _visual_tokens
+                            ):
+                                logger.warning("Pass 4: Ignoring visually weak stylesheet for %s", _fp)
+                                continue
                             frontend_files[_fp] = _content
                             _abs = os.path.join(str(project_root), _fp)
                             os.makedirs(os.path.dirname(_abs), exist_ok=True)
                             with open(_abs, "w") as _fh:
                                 _fh.write(_content)
                             _polished_count += 1
-                    logger.info("Pass 4: Futuristic design polish applied %d files", _polished_count)
+                    logger.info("Pass 4: Neo Runway futuristic polish applied %d files", _polished_count)
 
                     _can_verify_design = _polished_count > 0 and os.path.exists(os.path.join(frontend_dir, "node_modules"))
                     if _can_verify_design:
@@ -1371,7 +1395,7 @@ class GenerationOrchestrator:
                                     if os.path.exists(_abs):
                                         os.remove(_abs)
                         else:
-                            logger.info("Pass 4: Futuristic design polish build succeeded")
+                            logger.info("Pass 4: Neo Runway futuristic design polish build succeeded")
                 else:
                     logger.info("Pass 4: Skipping futuristic design polish; prompt did not request it")
             except Exception:
