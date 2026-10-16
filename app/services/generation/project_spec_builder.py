@@ -119,7 +119,7 @@ class ProjectSpecBuilder:
                 "theme_tokens": self._theme_tokens(ui_profile),
             },
             "deployment": {
-                "docker_org": "devopspaxarisglobalrepo",
+                "docker_org": "paxarisdocker",
                 "backend_repo_name": self._safe_repository_name(backend_repo_name),
                 "frontend_repo_name": self._safe_repository_name(frontend_repo_name),
             },

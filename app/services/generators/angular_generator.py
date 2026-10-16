@@ -17,7 +17,7 @@ class AngularGenerator(BaseGenerator):
         theme_tokens = frontend_spec.get("theme_tokens", {})
         app_title = self._title_case(app_name)
         deployment = project_spec.get("deployment", {})
-        docker_org = deployment.get("docker_org", "devopspaxarisglobalrepo")
+        docker_org = deployment.get("docker_org", "paxarisdocker")
         frontend_repo_name = deployment.get(
             "frontend_repo_name",
             f"paxarisglobal-admin-{app_name}-frontend",

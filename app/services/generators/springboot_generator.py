@@ -14,7 +14,7 @@ class SpringBootGenerator(BaseGenerator):
         domain = str(project_spec.get("domain", "general")).lower()
         ecommerce_mode = domain in {"ecommerce", "retail"}
         deployment = project_spec.get("deployment", {})
-        docker_org = deployment.get("docker_org", "devopspaxarisglobalrepo")
+        docker_org = deployment.get("docker_org", "paxarisdocker")
         backend_repo_name = deployment.get(
             "backend_repo_name",
             f"paxarisglobal-admin-{project_spec['project_name']}-backend",

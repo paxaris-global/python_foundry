@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: read
     env:
-      DOCKERHUB_USERNAME: devopspaxarisglobalrepo
+      DOCKERHUB_USERNAME: paxarisdocker
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - name: Checkout
@@ -33,7 +33,7 @@ jobs:
 
       - name: Set image metadata
         run: |
-          echo "IMAGE_NAME=devopspaxarisglobalrepo/${{ github.event.repository.name }}-frontend" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=paxarisdocker/${{ github.event.repository.name }}-frontend" >> "$GITHUB_ENV"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
